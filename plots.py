@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 
-figure_path = 'model_plots/'
 
 def plot_confusion_matrix(cm, savefile, name, cmap=plt.cm.Greens):
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
@@ -51,11 +50,12 @@ def plot_roc(tpr, fpr, roc_auc, savefile, name):
     plt.legend(loc="lower right")
     plt.savefig(savefile)
 
-def plot_losses(gen_loss, dis_loss):
+def plot_losses(gen_loss, dis_loss, gan_loss, savefile):
     fig, ax = plt.subplots()
     plt.plot(dis_loss, label='Discriminator')
-    plt.plot(gan_loss, label='Generator')
+    plt.plot(gen_loss, label='Generator')
+    plt.plot(gan_loss, label="GAN")
     plt.title("Training Loss GAN")
     plt.ylabel('Loss')
     plt.legend()
-    plt.savefig(figure_path + 'loss_gan_only_cic.png')
+    plt.savefig(savefile)
