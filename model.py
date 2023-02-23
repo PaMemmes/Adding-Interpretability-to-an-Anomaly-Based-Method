@@ -24,10 +24,14 @@ from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.optimizers.legacy import Adam
 from tensorflow.keras.callbacks import ModelCheckpoint
 
+import tensorflow.keras.optimizers
+
 from tqdm import tqdm
+import json
 
 import plots
 
+figure_path = 'model_plots/'
 filename = 'data/preprocessed_data.pickle'
 
 # Labels normal data as 0, anomalies as 1
@@ -47,83 +51,69 @@ def subset_normal(x_train, y_train):
     x_train = temp_df.copy()
     return x_train,y_train
 
-def get_generator(optim):
+def get_generator(config, num_features):
     generator = Sequential()
     generator.add(Dense(64, input_dim=num_features,
                   kernel_initializer=initializers.glorot_normal(seed=32)))
     generator.add(Activation('relu'))
 
-       
-    generator.add(Dense(128))
-    generator.add(Activation('relu'))
+    for _, layer in config['gen_layers'].items():
+        print(Activation(config['gen_activation']))
+        generator.add(Dense(layer))
+        generator.add(Activation(config['gen_activation']))
     
-    generator.add(Dense(256))
-    generator.add(Activation('relu'))
-    
-    generator.add(Dense(256))
-    generator.add(Activation('relu'))
-       
-    generator.add(Dense(512))
-    generator.add(Activation('relu'))
-   
-    generator.add(Dense(num_features, activation='tanh'))
-    
-    generator.compile(loss='binary_crossentropy', optimizer=optim)
+    generator.add(Dense(num_features))
+    generator.add(Activation('tanh'))
+
+    optim = getattr(tensorflow.optimizers.legacy, config['optimizer'])(learning_rate=config['learning_rate'], beta_1=config['momentum'])
+    generator.compile(loss=config['loss'], optimizer=optim)
 
     return generator
 
 
-def get_discriminator(optim):
+def get_discriminator(config, num_features):
 
     discriminator = Sequential()
 
     discriminator.add(Dense(256, input_dim=num_features,
                       kernel_initializer=initializers.glorot_normal(seed=32)))
     
-
-
-    discriminator.add(Dense(128))
-    discriminator.add(LeakyReLU())
-       
-    discriminator.add(Dense(128))
-    discriminator.add(LeakyReLU())
-    
-    discriminator.add(Dense(128))
-    discriminator.add(LeakyReLU())
-
-    discriminator.add(Dense(128))
-    discriminator.add(LeakyReLU())
+    for  _, layer in config['dis_layers'].items():
+        discriminator.add(Dense(layer))
+        activation = getattr(tensorflow.keras.layers, config['dis_activation'])()
+        discriminator.add(activation)
     
     discriminator.add(Dense(1))
     discriminator.add(Activation('sigmoid'))
-   
-    discriminator.compile(loss='binary_crossentropy', optimizer=optim)
-
+    
+    optim = getattr(tensorflow.optimizers.legacy, config['optimizer'])(learning_rate=config['learning_rate'], beta_1=config['momentum'])
+    discriminator.compile(loss=config['loss'], optimizer=optim)
 
     return discriminator
 
-def make_gan_network(discriminator, generator, optim, input_dim=num_features):
+def make_gan_network(discriminator, generator, input_dim):
     discriminator.trainable = False
     gan_input = Input(shape=(input_dim,))
+    print('gan_input', gan_input.shape)
     x = generator(gan_input)
+    print('x', x.shape)
     gan_output = discriminator(x)
 
     gan = Model(inputs=gan_input, outputs=gan_output)
+    optim = getattr(tensorflow.optimizers.legacy, config['optimizer'])(learning_rate=config['learning_rate'], beta_1=config['momentum'])
     gan.compile(loss='binary_crossentropy', optimizer=optim)
 
     return gan
 
 
-lr = 0.0002
-batch_size = 512
-epochs = 50
-momentum=0.5
-adam = Adam(learning_rate=lr, beta_1=momentum)
-
 if __name__ =='__main__':
+    
     input_file = open(filename, 'rb')
     preprocessed_data = pickle.load(input_file)
     input_file.close()
+
+    with open('config.json', 'r', encoding='utf-8') as f:
+        config = json.loads(f.read())
 
     le = preprocessed_data['le']
     x_train = preprocessed_data['x_train']
@@ -168,54 +158,57 @@ if __name__ =='__main__':
 
     x_train, y_train, x_test, y_test = dataset['x_train'], dataset['y_train'], dataset['x_test'], dataset['y_test']
 
-    batch_count = x_train.shape[0] // batch_size
-    pbar = tqdm(total=epochs * batch_count, position=0, leave=True)
+    batch_count = x_train.shape[0] // config['batch_size']
+    pbar = tqdm(total=config['epochs'] * batch_count, position=0, leave=True)
 
     gan_loss = []
     discriminator_loss = []
+    generator_loss = []
 
-    generator = get_generator(adam)
-    discriminator = get_discriminator(adam)
-    gan = make_gan_network(discriminator, generator, adam, input_dim=num_features)
+    generator = get_generator(config, num_features)
+    discriminator = get_discriminator(config, num_features)
+    gan = make_gan_network(discriminator, generator, input_dim=num_features)
 
     print("Number params: ", gan.count_params())
 
-    for epoch in range(epochs):
+    for epoch in range(config['epochs']):
         for index in range(batch_count):
             pbar.update(1)
-            noise = np.random.normal(0, 1, size=[batch_size, num_features])
+            noise = np.random.normal(0, 1, size=[config['batch_size'], num_features])
 
             generated_images = generator.predict_on_batch(noise)
 
-            image_batch = x_train[index * batch_size: (index + 1) * batch_size]
+            image_batch = x_train[index * config['batch_size']: (index + 1) * config['batch_size']]
 
             X = np.vstack((generated_images, image_batch))
-            y_dis = np.ones(2*batch_size)
-            y_dis[:batch_size] = 0
+            y_dis = np.ones(2*config['batch_size'])
+            y_dis[:config['batch_size']] = 0
 
             discriminator.trainable = True
             d_loss = discriminator.train_on_batch(X, y_dis)
 
-            noise = np.random.uniform(0, 1, size=[batch_size, num_features])
-            y_gen = np.ones(batch_size)
+            noise = np.random.uniform(0, 1, size=[config['batch_size'], num_features])
+            y_gen = np.ones(config['batch_size'])
             discriminator.trainable = False
             g_loss = gan.train_on_batch(noise, y_gen)
 
             discriminator_loss.append(d_loss)
+            generator_loss.append(g_loss)
             gan_loss.append(g_loss)
 
         print("Epoch %d Batch %d/%d [D loss: %f] [G loss:%f]" %
             (epoch, index, batch_count, d_loss, g_loss))
     
 
+    plots.plot_losses(discriminator_loss, generator_loss, gan_loss, figure_path + 'loss_gan.png')
 
-    nr_batches_test = np.ceil(x_test.shape[0] // batch_size).astype(np.int32)
+    nr_batches_test = np.ceil(x_test.shape[0] // config['batch_size']).astype(np.int32)
 
     results = []
 
     for t in range(nr_batches_test + 1):
-        ran_from = t * batch_size
-        ran_to = (t + 1) * batch_size
+        ran_from = t * config['batch_size']
+        ran_to = (t + 1) * config['batch_size']
         image_batch = x_test[ran_from:ran_to]
         tmp_rslt = discriminator.predict(x=image_batch, batch_size=128, verbose=0)
         results = np.append(results, tmp_rslt)
