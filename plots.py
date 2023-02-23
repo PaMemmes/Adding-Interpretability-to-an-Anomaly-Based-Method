@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 def plot_confusion_matrix(cm, savefile, name, cmap=plt.cm.Greens):
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
