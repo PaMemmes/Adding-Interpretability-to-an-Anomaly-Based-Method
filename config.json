@@ -14,7 +14,7 @@
     },
     "dis_activation":"LeakyReLU",
     "gen_activation":"relu",
-    
+
     "loss":"binary_crossentropy",
     "optimizer":"Adam",
     "epochs":50,
