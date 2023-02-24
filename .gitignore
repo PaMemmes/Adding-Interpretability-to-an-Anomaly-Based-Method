@@ -7,3 +7,4 @@ suricata_analysis/theZoo_fragmented/*
 suricata_analysis/theZoo_fragmented_random/*
 suricata_analysis/theZoo_unfragmented/*
 optims/*
+*.pyc
