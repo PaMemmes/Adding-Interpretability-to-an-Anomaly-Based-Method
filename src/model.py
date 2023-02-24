@@ -16,9 +16,8 @@ import tensorflow as tf
 from tensorflow import keras
 
 from tensorflow.keras.layers import Dense, Dropout
-from tensorflow.keras.layers import LeakyReLU
-from tensorflow.keras.layers import Input, BatchNormalization, LeakyReLU, Dense, Reshape, Flatten, Activation
-from tensorflow.keras.layers import Dropout, multiply, GaussianNoise, MaxPooling2D, concatenate
+from tensorflow.keras.layers import Input, LeakyReLU, Dense, Reshape, Flatten, Activation
+from tensorflow.keras.layers import multiply, GaussianNoise, concatenate
 from tensorflow.keras import initializers
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.optimizers.legacy import Adam
@@ -29,65 +28,11 @@ import tensorflow.keras.optimizers
 from tqdm import tqdm
 import json
 
-from utils.utils import make_labels_binary, subset_normal
+from utils.utils import make_labels_binary, subset_normal, get_generator, get_discriminator, make_gan_network
+from utils.plots import plot_confusion_matrix, plot_accuracy, plot_loss, plot_roc, plot_losses
 
 figure_path = '../model_plots/'
 filename = '../data/preprocessed_data.pickle'
-
-
-def get_generator(config, num_features):
-    generator = Sequential()
-    generator.add(Dense(64, input_dim=num_features,
-                  kernel_initializer=initializers.glorot_normal(seed=32)))
-    generator.add(Activation('relu'))
-
-    for _, layer in config['gen_layers'].items():
-        print(Activation(config['gen_activation']))
-        generator.add(Dense(layer))
-        generator.add(Activation(config['gen_activation']))
-    
-    generator.add(Dense(num_features))
-    generator.add(Activation('tanh'))
-
-    optim = getattr(tensorflow.optimizers.legacy, config['optimizer'])(learning_rate=config['learning_rate'], beta_1=config['momentum'])
-    generator.compile(loss=config['loss'], optimizer=optim)
-
-    return generator
-
-
-def get_discriminator(config, num_features):
-
-    discriminator = Sequential()
-
-    discriminator.add(Dense(256, input_dim=num_features,
-                      kernel_initializer=initializers.glorot_normal(seed=32)))
-    
-    for  _, layer in config['dis_layers'].items():
-        discriminator.add(Dense(layer))
-        activation = getattr(tensorflow.keras.layers, config['dis_activation'])()
-        discriminator.add(activation)
-    
-    discriminator.add(Dense(1))
-    discriminator.add(Activation('sigmoid'))
-    
-    optim = getattr(tensorflow.optimizers.legacy, config['optimizer'])(learning_rate=config['learning_rate'], beta_1=config['momentum'])
-    discriminator.compile(loss=config['loss'], optimizer=optim)
-
-    return discriminator
-
-def make_gan_network(discriminator, generator, input_dim):
-    discriminator.trainable = False
-    gan_input = Input(shape=(input_dim,))
-    print('gan_input', gan_input.shape)
-    x = generator(gan_input)
-    print('x', x.shape)
-    gan_output = discriminator(x)
-
-    gan = Model(inputs=gan_input, outputs=gan_output)
-    optim = getattr(tensorflow.optimizers.legacy, config['optimizer'])(learning_rate=config['learning_rate'], beta_1=config['momentum'])
-    gan.compile(loss='binary_crossentropy', optimizer=optim)
-
-    return gan
 
 
 if __name__ =='__main__':
@@ -153,7 +98,7 @@ if __name__ =='__main__':
 
     generator = get_generator(config, num_features)
     discriminator = get_discriminator(config, num_features)
-    gan = make_gan_network(discriminator, generator, input_dim=num_features)
+    gan = make_gan_network(config, discriminator, generator, input_dim=num_features)
 
     print("Number params: ", gan.count_params())
 
@@ -186,7 +131,7 @@ if __name__ =='__main__':
             (epoch, index, batch_count, d_loss, g_loss))
     
 
-    plots.plot_losses(discriminator_loss, generator_loss, gan_loss, figure_path + 'loss_gan.png')
+    plot_losses(discriminator_loss, generator_loss, gan_loss, figure_path + 'loss_gan.png')
 
     nr_batches_test = np.ceil(x_test.shape[0] // config['batch_size']).astype(np.int32)
 
@@ -227,6 +172,6 @@ if __name__ =='__main__':
 
     fpr, tpr, thresholds = roc_curve(y_test, y_pred)
     auc_curve = auc(fpr, tpr)
-    plots.plot_roc(tpr, fpr, auc_curve, figure_path + 'roc_gan_only_cic.png', 'GAN')
+    plot_roc(tpr, fpr, auc_curve, figure_path + 'roc_gan_only_cic.png', 'GAN')
     cm = confusion_matrix(y_test, y_pred)
-    plots.plot_confusion_matrix(cm, figure_path + 'confusion_gan_only_cic.png', 'GAN')
+    plot_confusion_matrix(cm, figure_path + 'confusion_gan_only_cic.png', 'GAN')
