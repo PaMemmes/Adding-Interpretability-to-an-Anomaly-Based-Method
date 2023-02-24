@@ -29,27 +29,11 @@ import tensorflow.keras.optimizers
 from tqdm import tqdm
 import json
 
-import plots
+from utils.utils import make_labels_binary, subset_normal
 
-figure_path = 'model_plots/'
-filename = 'data/preprocessed_data.pickle'
+figure_path = '../model_plots/'
+filename = '../data/preprocessed_data.pickle'
 
-# Labels normal data as 0, anomalies as 1
-def make_labels_binary(label_encoder, labels):
-    normal_data_index = np.where(label_encoder.classes_ == 'BENIGN')[0][0]
-    new_labels = labels.copy()
-    new_labels[labels != normal_data_index] = 1
-    new_labels[labels == normal_data_index] = 0
-    return new_labels
-
-def subset_normal(x_train, y_train):
-    temp_df = x_train.copy()
-    temp_df['label'] = y_train
-    temp_df = temp_df.loc[temp_df['label'] == 0]
-    y_train = temp_df['label'].copy()
-    temp_df = temp_df.drop('label', axis = 1)
-    x_train = temp_df.copy()
-    return x_train,y_train
 
 def get_generator(config, num_features):
     generator = Sequential()
@@ -132,6 +116,8 @@ if __name__ =='__main__':
     print(x_test.shape)
     print(y_test.shape)
 
+    print(type(y_train))
+    print(y_train)
     y_train = make_labels_binary(le, y_train)
     y_test = make_labels_binary(le, y_test)
 

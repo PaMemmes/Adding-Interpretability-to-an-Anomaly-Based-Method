@@ -20,8 +20,10 @@ def reduce_anomalies(df, pct_anomalies=.01):
     return new_df
 
 # Remove infinities and NaNs
-def remove_infs(df, labels):
+def remove_infs(df):
     assert isinstance(df, pd.DataFrame)
+    labels = df['Label']
+    df = df.drop('Label', axis=1)
     indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)
     return df[indices_to_keep], labels[indices_to_keep]
 
@@ -29,17 +31,18 @@ def remove_infs(df, labels):
 if __name__ =='__main__':
     df = pd.read_csv('data/cicids2017_kaggle/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv')
     df = df.rename(columns={' Label': 'Label'})
-    le = LabelEncoder()
-    le.fit(df.Label)
 
-    labels = df['Label'].copy()
+    before_removal = len(df)
+    df, labels = remove_infs(df)
+    print(f'Length before NaN drop: {before_removal}, after NaN drop: {len(df)}\n \
+    The df is now {len(df)/before_removal} of its original size')
+
+    le = LabelEncoder()
+    le.fit(labels)
+
     int_labels = le.transform(labels)
     df = df.drop('Label', axis=1)
 
-    before_removal = len(df)
-    df, int_labels = remove_infs(df, int_labels)
-    print(f'Length before NaN drop: {before_removal}, after NaN drop: {len(df)}\n \
-    The df is now {len(df)/before_removal} of its original size')
 
     x_train, x_test, y_train, y_test = train_test_split(df,
                                                     int_labels,
