@@ -22,7 +22,7 @@ def reduce_anomalies(df, pct_anomalies=.01):
 # Remove infinities and NaNs
 def remove_infs(df, labels):
     assert isinstance(df, pd.DataFrame)
-    indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any(1)
+    indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)
     return df[indices_to_keep], labels[indices_to_keep]
 
 
