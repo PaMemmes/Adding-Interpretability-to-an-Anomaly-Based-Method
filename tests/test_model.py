@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 
-from src.utils.utils import make_labels_binary, subset_normal
+from src.utils.utils import make_labels_binary, subset_normal, save_results
 
 @pytest.fixture
 def example_labels():
