@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 
 # Labels normal data as 0, anomalies as 1
@@ -18,3 +20,8 @@ def subset_normal(x_train, y_train):
     temp_df = temp_df.drop('label', axis = 1)
     x_train = temp_df.copy()
     return x_train,y_train
+
+def save_results(name, config, results):
+    with open(name, 'w', encoding='utf-8') as f:
+        json.dump(config, f, ensure_ascii=False, indent=4)
+        json.dump(results, f, ensure_ascii=False, indent=4)
