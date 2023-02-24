@@ -1,0 +1,10 @@
+data/*
+.ipynb_checkpoints/*
+*.png
+suricata_analysis/old/*
+suricata_analysis/plots/*
+suricata_analysis/theZoo_fragmented/*
+suricata_analysis/theZoo_fragmented_random/*
+suricata_analysis/theZoo_unfragmented/*
+optims/*
+*.pyc
