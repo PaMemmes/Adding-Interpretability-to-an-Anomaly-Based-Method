@@ -9,14 +9,8 @@ from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 import numpy as np
 
-#import seaborn as sns
-
-import tensorflow as tf
-from tensorflow import keras
-
 from tqdm import tqdm
 
-from utils.utils import make_labels_binary, subset_normal, save_results
 from utils.plots import plot_confusion_matrix, plot_roc, plot_losses, plot_precision_recall
 from utils.network import get_discriminator, get_generator, make_gan_network
 
@@ -34,42 +28,12 @@ if __name__ =='__main__':
         with open('config.json', 'r', encoding='utf-8') as f:
             config = json.loads(f.read())
 
-        le = preprocessed_data['le']
-        x_train = preprocessed_data['x_train']
-        y_train = preprocessed_data['y_train']
-        x_test = preprocessed_data['x_test']
-        y_test = preprocessed_data['y_test']
+        dataset = preprocessed_data['dataset']
 
-        num_features = x_train.shape[1]
+        num_features = dataset['x_train'].shape[1]
 
-        assert x_train.shape[0] == y_train.shape[0]
-        assert x_test.shape[0] == y_test.shape[0]
-        assert x_train.shape[1] == x_test.shape[1]
-
-        print(x_train.shape)
-        print(y_train.shape)
-        print(x_test.shape)
-        print(y_test.shape)
-
-        y_train = make_labels_binary(le, y_train)
-        y_test = make_labels_binary(le, y_test)
-
-        #Subsetting only Normal Network packets in training set
-        x_train, y_train = subset_normal(x_train, y_train)
-
-        scaler = MinMaxScaler()
-
-        x_train = scaler.fit_transform(x_train)
-        x_test = scaler.transform(x_test)
-
-        dataset = {}
-        dataset['x_train'] = x_train.astype(np.float32)
-        dataset['y_train'] = y_train.astype(np.float32)
-        dataset['x_test'] = x_test.astype(np.float32)
-        dataset['y_test'] = y_test.astype(np.float32)
-
-        normals = collections.Counter(y_test)[0]
-        anomalies = collections.Counter(y_test)[1]
+        normals = collections.Counter(dataset['y_test'])[0]
+        anomalies = collections.Counter(dataset['y_test'])[1]
         anomalies_percentage = anomalies / (normals + anomalies)
         print('Number of Normal Network packets in the test set:', normals)
         print('Number of Anomalous Network packets in the test set:', anomalies)

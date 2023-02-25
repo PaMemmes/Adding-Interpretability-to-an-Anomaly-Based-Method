@@ -5,8 +5,6 @@ import numpy as np
 
 # Labels normal data as 0, anomalies as 1
 def make_labels_binary(label_encoder, labels):
-    print(labels)
-    print(label_encoder)
     normal_data_index = np.where(label_encoder.classes_ == 'BENIGN')[0][0]
     new_labels = labels.copy()
     new_labels[labels != normal_data_index] = 1
