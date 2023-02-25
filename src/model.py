@@ -1,13 +1,10 @@
-import glob
 import pickle
-import os
 import collections
 import json
+from pathlib import Path
 
-from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, average_precision_score
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler, StandardScaler
-from sklearn.metrics import precision_recall_curve, auc, confusion_matrix, accuracy_score
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, confusion_matrix, accuracy_score
+from sklearn.preprocessing import MinMaxScaler
 
 import pandas as pd
 import numpy as np
@@ -75,7 +72,7 @@ if __name__ =='__main__':
         anomalies_percentage = anomalies / (normals + anomalies)
         print('Number of Normal Network packets in the test set:', normals)
         print('Number of Anomalous Network packets in the test set:', anomalies)
-        print('Ratio of anomalous to normal network packets: ', anomalies_percentage)
+        print('Ratio of anomalous to normal network packets in the test set: ', anomalies_percentage)
 
         x_train, y_train, x_test, y_test = dataset['x_train'], dataset['y_train'], dataset['x_test'], dataset['y_test']
 
@@ -165,7 +162,12 @@ if __name__ =='__main__':
         cm = confusion_matrix(y_test, y_pred)
         plot_confusion_matrix(cm, figure_path + 'confusion_gan_only_cic.png', 'GAN')
 
-        results = {'Accuracy': accuracy_score(y_test, y_pred),
+        results = {
+                'Normals (%)': 1 - anomalies_percentage,
+                'Anomalies (%)': anomalies_percentage,
+                'Mean Score for normal packets': results_df.loc[results_df['y_test'] == 0, 'results'].mean(),
+                'Mean Score for anomalous packets': results_df.loc[results_df['y_test'] == 1, 'results'].mean(),
+                'Accuracy': accuracy_score(y_test, y_pred),
                 'Precision': precision,
                 'Recall': recall,
                 'F1': f1}
