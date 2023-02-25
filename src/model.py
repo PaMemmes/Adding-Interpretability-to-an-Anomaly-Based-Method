@@ -130,7 +130,6 @@ if __name__ =='__main__':
             image_batch = x_test[ran_from:ran_to]
             tmp_rslt = discriminator.predict(x=image_batch, batch_size=128, verbose=0)
             results = np.append(results, tmp_rslt)
-
         pd.options.display.float_format = '{:20,.7f}'.format
         results_df = pd.concat([pd.DataFrame(results), pd.DataFrame(y_test)], axis=1)
         results_df.columns = ['results', 'y_test']
@@ -144,6 +143,9 @@ if __name__ =='__main__':
         y_pred = results.copy()
         y_pred = np.array(y_pred)
 
+        probas = np.vstack((1-y_pred, y_pred)).T
+        plot_precision_recall(y_test, probas, name + '/precision_recall_only_cic.png')
+        
         # Thresholding based on the score
         inds = y_pred > per
         inds_comp = y_pred <= per
@@ -162,7 +164,7 @@ if __name__ =='__main__':
         plot_roc(tpr, fpr, auc_curve, name + '/roc_gan_only_cic.png', 'GAN')
         cm = confusion_matrix(y_test, y_pred)
         plot_confusion_matrix(cm, name + '/confusion_gan_only_cic.png', 'GAN')
-        plot_precision_recall(y_test, y_pred, name + '/precision_recall_only_cic.png')
+        
         results = {
                 'Normals (%)': 1 - anomalies_percentage,
                 'Anomalies (%)': anomalies_percentage,

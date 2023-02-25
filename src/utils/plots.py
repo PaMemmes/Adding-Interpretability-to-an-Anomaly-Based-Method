@@ -63,5 +63,5 @@ def plot_losses(gen_loss, dis_loss, gan_loss, savefile):
 
 def plot_precision_recall(y_test, y_preds, savefile):
     fig, ax = plt.subplots()
-    skplt.plot_precision_recall_curve(y_test, y_preds)
+    skplt.metrics.plot_precision_recall(y_test, y_preds)
     plt.savefig(savefile)
