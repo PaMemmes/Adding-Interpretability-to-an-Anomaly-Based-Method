@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import scikitplot as skplt
 
 def plot_confusion_matrix(cm, savefile, name, cmap=plt.cm.Greens):
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
@@ -58,4 +59,9 @@ def plot_losses(gen_loss, dis_loss, gan_loss, savefile):
     plt.title("Training Loss GAN")
     plt.ylabel('Loss')
     plt.legend()
+    plt.savefig(savefile)
+
+def plot_precision_recall(y_test, y_preds, savefile):
+    fig, ax = plt.subplots()
+    skplt.plot_precision_recall(y_test, y_preds)
     plt.savefig(savefile)
