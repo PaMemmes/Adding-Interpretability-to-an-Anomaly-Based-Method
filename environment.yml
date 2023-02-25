@@ -22,8 +22,8 @@ dependencies:
   - brotli-bin=1.0.9=h5eee18b_7
   - brotlipy=0.7.0=py39h27cfd23_1003
   - c-ares=1.18.1=h7f8727e_0
-  - ca-certificates=2023.01.10=h06a4308_0
-  - certifi=2022.12.7=py39h06a4308_0
+  - ca-certificates=2022.12.7=ha878542_0
+  - certifi=2022.12.7=pyhd8ed1ab_0
   - cffi=1.15.1=py39h5eee18b_3
   - click=8.0.4=py39h06a4308_0
   - comm=0.1.2=py39h06a4308_0
@@ -151,6 +151,7 @@ dependencies:
   - qtwebkit=5.212=h4eab89a_4
   - readline=8.2=h5eee18b_0
   - scikit-learn=1.2.0=py39h6a678d5_0
+  - scikit-plot=0.3.7=py_1
   - scipy=1.10.0=py39h14f4228_0
   - seaborn=0.12.2=py39h06a4308_0
   - sip=6.6.2=py39h6a678d5_0
