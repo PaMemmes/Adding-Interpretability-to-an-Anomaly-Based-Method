@@ -17,19 +17,20 @@ from tensorflow import keras
 from tqdm import tqdm
 
 from utils.utils import make_labels_binary, subset_normal, save_results
-from utils.plots import plot_confusion_matrix, plot_roc, plot_losses
+from utils.plots import plot_confusion_matrix, plot_roc, plot_losses, plot_precision_recall
 from utils.network import get_discriminator, get_generator, make_gan_network
 
-figure_path = '../model_plots/'
 filename = '../data/preprocessed_data.pickle'
 
 if __name__ =='__main__':
-    for i in range(11,20):
-        name = '../experiments/experiment' + str(i) + '.json'
+    for i in range(1,10):
+        name = '../experiments/experiment' + str(i)
+        json_file = name + '/experiment' + str(i) + '.json'
+        Path(name).mkdir(parents=True, exist_ok=True)
+
         input_file = open(filename, 'rb')
         preprocessed_data = pickle.load(input_file)
         input_file.close()
-
         with open('config.json', 'r', encoding='utf-8') as f:
             config = json.loads(f.read())
 
@@ -117,7 +118,7 @@ if __name__ =='__main__':
             print(f"Epoch {epoch} Batch {index} {batch_count} [D loss: {d_loss}] [G loss:{g_loss}]")
         
 
-        plot_losses(discriminator_loss, generator_loss, gan_loss, figure_path + 'loss_gan.png')
+        plot_losses(discriminator_loss, generator_loss, gan_loss, name + '/loss_gan.png')
 
         nr_batches_test = np.ceil(x_test.shape[0] // config['batch_size']).astype(np.int32)
 
@@ -158,10 +159,10 @@ if __name__ =='__main__':
 
         fpr, tpr, thresholds = roc_curve(y_test, y_pred)
         auc_curve = auc(fpr, tpr)
-        plot_roc(tpr, fpr, auc_curve, figure_path + 'roc_gan_only_cic.png', 'GAN')
+        plot_roc(tpr, fpr, auc_curve, name + '/roc_gan_only_cic.png', 'GAN')
         cm = confusion_matrix(y_test, y_pred)
-        plot_confusion_matrix(cm, figure_path + 'confusion_gan_only_cic.png', 'GAN')
-
+        plot_confusion_matrix(cm, name + '/confusion_gan_only_cic.png', 'GAN')
+        plot_precision_recall(y_test, y_pred, name + '/precision_recall_only_cic.png')
         results = {
                 'Normals (%)': 1 - anomalies_percentage,
                 'Anomalies (%)': anomalies_percentage,
@@ -171,4 +172,4 @@ if __name__ =='__main__':
                 'Precision': precision,
                 'Recall': recall,
                 'F1': f1}
-        save_results(name, config, results)
+        save_results(json_file, config, results)
