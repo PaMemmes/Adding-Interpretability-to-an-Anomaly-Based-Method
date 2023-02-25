@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 import numpy as np
-from src.preprocess import remove_infs
+from src.utils.utils import remove_infs
 
 @pytest.fixture
 def example_df():

@@ -9,3 +9,5 @@ suricata_analysis/theZoo_unfragmented/*
 optims/*
 *.pyc
 experiments/*
+.coverage
+model_hyperparameter.ipynb
