@@ -69,13 +69,21 @@ class GAN(tf.keras.Model):
                 "d_loss": self.dis_loss_tracker.result()
             }
 
+    def test_step(self, data):
+        x, y = data
+        nr_batches_test = 1
+        preds = self.discriminator(x, training=False)
+        loss = self.loss_function(y, preds)
+        self.dis_loss_tracker.update_state(loss)
+        return {m.name: m.result() for m in self.metrics}
+
 
 class HyperGAN(keras_tuner.HyperModel):
     def __init__(self, num_features, config):
         super(HyperGAN, self).__init__()
         self.num_features = num_features
         self.config = config
-    
+
     def get_discriminator(self, dropout):
 
         discriminator = Sequential()
@@ -111,7 +119,7 @@ class HyperGAN(keras_tuner.HyperModel):
 
 
     def build(self, hp):
-        drop_rate = hp.Float('Dropout', min_value = 0, max_value = 0.95)
+        drop_rate = hp.Float('Dropout', min_value = 0, max_value = 0.30)
         activation_function = hp.Choice('activation function', ['relu', 'leaky_relu', 'tanh'])
 
 
@@ -130,7 +138,6 @@ class HyperGAN(keras_tuner.HyperModel):
         optimizer = tf.keras.optimizers.legacy.Adam()
         binary_crossentropy = tf.keras.losses.BinaryCrossentropy()
         model_gan.compile(optimizer, optimizer, binary_crossentropy)
-        
         return model_gan
 
 
@@ -145,16 +152,12 @@ class HyperGAN(keras_tuner.HyperModel):
 
 
     def fit(self, hp, model, x, y, callbacks=None, **kwargs):
-        print('x in fit', x.shape)
-        print('y in fit', y.shape)
-        model.fit(x, y, batch_size=1,**kwargs)
+        model.fit(x, y, batch_size=hp.Choice("batch_size", [16, 32]),**kwargs)
         preds = model.discriminator.predict(x)
 
         score = self.score(y, preds)
-
-        return -score
-
-
+        return (model.dis_loss_tracker.result().numpy() + model.gen_loss_tracker.result().numpy()) / 2
+        
 if __name__ == '__main__':
     filename = '../data/preprocessed_data.pickle'
 
@@ -172,28 +175,20 @@ if __name__ == '__main__':
     train_y = np.asarray(dataset['y_train'])
     validation_x = np.asarray(dataset['x_test'])
     validation_y = np.asarray(dataset['y_test'])
-
-    trials = 10
-    print(type(dataset['x_train']), type(dataset['x_test']), type(dataset['y_train']), type(dataset['y_test']))
-    print(dataset['x_train'].shape, dataset['y_train'].shape)
+    
+    train_dataset = tf.data.Dataset.from_tensor_slices((train_x, train_y))
     tuner = keras_tuner.BayesianOptimization(
         hypermodel=HyperGAN(num_features, config),
-        # No objective to specify.
-        # Objective is the return value of `HyperModel.fit()`.
-        max_trials=trials,
+        max_trials=3,
         overwrite=True,
         directory="experiments",
         project_name="HyperGAN",
     )
-    # 108470
-    y_train = np.asarray(train_y).astype('float32').reshape((-1,1))
-    x_train = np.random.randint(0, 100, size=(100, 78)).astype('float32')
-    y_train = np.random.randint(0, 2, size=(100)).astype('float32')
-    print('x_train in main', x_train)
-    print('y_train in main', y_train)
+
     tuner.search(
-        x = x_train,
-        y = y_train
+        x = train_x,
+        y = train_y,
+        validation_data=(validation_x, validation_y)
         )
 
     tuner.results_summary()
