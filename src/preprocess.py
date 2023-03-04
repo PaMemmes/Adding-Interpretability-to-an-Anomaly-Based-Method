@@ -6,7 +6,8 @@ from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from sklearn.model_selection import train_test_split
 import glob
 
-from utils.utils import remove_infs, make_labels_binary, subset_normal, split_in_batches
+from utils.utils import DataSequence
+from utils.utils import remove_infs, make_labels_binary, subset_normal
 
 if __name__ =='__main__':
     df = pd.read_csv('../data/cicids2017_kaggle/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv')
@@ -25,6 +26,7 @@ if __name__ =='__main__':
     train_ratio = 0.65
     val_ratio = 0.15
     test_ratio = 0.2
+
     x_train, x_test, y_train, y_test = train_test_split(df, int_labels, test_size=1-train_ratio)
     x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size=test_ratio/(test_ratio + val_ratio))
     assert x_train.shape[0] == y_train.shape[0]
@@ -46,11 +48,14 @@ if __name__ =='__main__':
     x_val = scaler.transform(x_val)
     x_test = scaler.transform(x_test)
 
+    train_sqc = DataSequence(x_train, y_train, 1)
+    val_sqc = DataSequence(x_val, y_val, 1)
+    test_sqc = DataSequence(x_test, y_test, 1)
+
     dataset = {}
-    dataset['x_train'] = x_train.astype(np.float32)
-    dataset['y_train'] = y_train.to_numpy().astype(np.float32)
-    dataset['x_test'] = x_test.astype(np.float32)
-    dataset['y_test'] = y_test.astype(np.float32)
+    dataset['train'] = train_sqc
+    dataset['val'] = val_sqc
+    dataset['test'] = test_sqc
 
     preprocessed_data = {
         'dataset': dataset,
