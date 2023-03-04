@@ -32,8 +32,9 @@ class GAN(tf.keras.Model):
         
     def train_step(self, data):
         x, y = data
+        print('X.SHAPE', x.shape)
         data = tf.convert_to_tensor(x)
-        batch_size = 1
+        batch_size = x.shape[0]
         noise = tf.random.normal(shape=(batch_size, self.num_features))
 
         generated_data = self.generator(noise)
@@ -43,6 +44,7 @@ class GAN(tf.keras.Model):
             [tf.ones((batch_size, 1)), tf.zeros((batch_size, 1))], axis=0
         )
         
+        # Adding noise for labels: https://www.inference.vc/instance-noise-a-trick-for-stabilising-gan-training/
         labels += 0.05 * tf.random.uniform(tf.shape(labels))
 
         with tf.GradientTape() as tape:
@@ -145,14 +147,15 @@ class HyperGAN(keras_tuner.HyperModel):
         return 1
 
 
-    def fit(self, hp, model, x, y, callbacks=None, **kwargs):
-        print(x)
-        print(y)
-        model.fit(x, y, batch_size=1, **kwargs)
+    def fit(self, hp, model, data, callbacks=None, **kwargs):
+        print('data', data)
+        x,y = data.x, data.y
+        model.fit(x, y, batch_size=data.batch_size, **kwargs)
         preds = model.discriminator.predict(x)
 
         score = self.score(y, preds)
         return (model.dis_loss_tracker.result().numpy() + model.gen_loss_tracker.result().numpy()) / 2
+
 
 if __name__ == '__main__':
     filename = '../data/preprocessed_data.pickle'
@@ -166,13 +169,13 @@ if __name__ == '__main__':
 
 
     dataset = preprocessed_data['dataset']
-    num_features = dataset['x_train'].shape[1]
-    train_x = np.asarray(dataset['x_train'])
-    train_y = np.asarray(dataset['y_train'])
-    validation_x = np.asarray(dataset['x_test'])
-    validation_y = np.asarray(dataset['y_test'])
-    
-    train_dataset = tf.data.Dataset.from_tensor_slices((train_x, train_y))
+    print(dataset['train'].x.shape)
+    num_features = dataset['train'].x.shape[1]
+    train = dataset['train']
+    val = dataset['val']
+    test = dataset['test']
+    # train_dataset = tf.data.Dataset.from_tensor_slices((train_x, train_y))
+
     tuner = keras_tuner.BayesianOptimization(
         hypermodel=HyperGAN(num_features, config),
         max_trials=2,
@@ -182,9 +185,8 @@ if __name__ == '__main__':
     )
 
     tuner.search(
-        x = train_x,
-        y = train_y,
-        validation_data=(validation_x, validation_y)
+        train,
+        validation_data=(val.x, val.y)
         )
 
     tuner.results_summary()
@@ -194,5 +196,5 @@ if __name__ == '__main__':
     hypermodel = HyperGAN(num_features, config)
     model = hypermodel.build(best_hp)
 
-    # model.fit(best_hps[0], model, x=train_x, y=train_y, epochs=1)
-    hypermodel.fit(best_hp, model, train_x, train_y)
+    # hypermodel.fit(best_hp, model, train_x, train_y)
+    hypermodel.fit(best_hp, model, train)
