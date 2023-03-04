@@ -42,7 +42,7 @@ class GAN(tf.keras.Model):
         labels = tf.concat(
             [tf.ones((batch_size, 1)), tf.zeros((batch_size, 1))], axis=0
         )
-        # Add random noise to the labels - important trick!
+        
         labels += 0.05 * tf.random.uniform(tf.shape(labels))
 
         with tf.GradientTape() as tape:
@@ -142,22 +142,18 @@ class HyperGAN(keras_tuner.HyperModel):
 
 
     def score(self, y, y_pred):
-        inds = y_pred > .30
-        inds_comp = y_pred <= 0.3
-        y_pred[inds] = 0
-        y_pred[inds_comp] = 1
-        precision, recall, f1, _ = precision_recall_fscore_support(
-            y, y_pred, average='binary')
-        return f1 
+        return 1
 
 
     def fit(self, hp, model, x, y, callbacks=None, **kwargs):
-        model.fit(x, y, batch_size=hp.Choice("batch_size", [16, 32]),**kwargs)
+        print(x)
+        print(y)
+        model.fit(x, y, batch_size=1, **kwargs)
         preds = model.discriminator.predict(x)
 
         score = self.score(y, preds)
         return (model.dis_loss_tracker.result().numpy() + model.gen_loss_tracker.result().numpy()) / 2
-        
+
 if __name__ == '__main__':
     filename = '../data/preprocessed_data.pickle'
 
@@ -179,9 +175,9 @@ if __name__ == '__main__':
     train_dataset = tf.data.Dataset.from_tensor_slices((train_x, train_y))
     tuner = keras_tuner.BayesianOptimization(
         hypermodel=HyperGAN(num_features, config),
-        max_trials=3,
+        max_trials=2,
         overwrite=True,
-        directory="experiments",
+        directory="./experiments",
         project_name="HyperGAN",
     )
 
@@ -192,3 +188,11 @@ if __name__ == '__main__':
         )
 
     tuner.results_summary()
+
+    best_hp = tuner.get_best_hyperparameters(5)[0]
+
+    hypermodel = HyperGAN(num_features, config)
+    model = hypermodel.build(best_hp)
+
+    # model.fit(best_hps[0], model, x=train_x, y=train_y, epochs=1)
+    hypermodel.fit(best_hp, model, train_x, train_y)
