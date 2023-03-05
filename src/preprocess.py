@@ -48,9 +48,9 @@ if __name__ =='__main__':
     x_val = scaler.transform(x_val)
     x_test = scaler.transform(x_test)
 
-    train_sqc = DataSequence(x_train, y_train, 1)
-    val_sqc = DataSequence(x_val, y_val, 1)
-    test_sqc = DataSequence(x_test, y_test, 1)
+    train_sqc = DataSequence(x_train, y_train, 32)
+    val_sqc = DataSequence(x_val, y_val, 32)
+    test_sqc = DataSequence(x_test, y_test, 32)
 
     dataset = {}
     dataset['train'] = train_sqc
