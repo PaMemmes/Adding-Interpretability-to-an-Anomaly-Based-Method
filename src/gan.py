@@ -32,9 +32,9 @@ class GAN(tf.keras.Model):
         
     def train_step(self, data):
         x, y = data
-        print('X.SHAPE', x.shape)
+        
+        batch_size = tf.shape(x)[0]
         data = tf.convert_to_tensor(x)
-        batch_size = x.shape[0]
         noise = tf.random.normal(shape=(batch_size, self.num_features))
 
         generated_data = self.generator(noise)
@@ -55,7 +55,7 @@ class GAN(tf.keras.Model):
         self.dis_optimizer.apply_gradients(zip(grads, self.discriminator.trainable_weights))
         
         noise = tf.random.normal(shape=[batch_size, self.num_features])
-        y_gen = np.zeros((batch_size,1))
+        y_gen = tf.zeros((batch_size,1))
 
         with tf.GradientTape() as tape:
             preds = self.discriminator(self.generator(noise))
@@ -73,7 +73,6 @@ class GAN(tf.keras.Model):
 
     def test_step(self, data):
         x, y = data
-        nr_batches_test = 1
         preds = self.discriminator(x, training=False)
         loss = self.loss_function(y, preds)
         self.dis_loss_tracker.update_state(loss)
@@ -148,7 +147,6 @@ class HyperGAN(keras_tuner.HyperModel):
 
 
     def fit(self, hp, model, data, callbacks=None, **kwargs):
-        print('data', data)
         x,y = data.x, data.y
         model.fit(x, y, batch_size=data.batch_size, **kwargs)
         preds = model.discriminator.predict(x)
@@ -169,7 +167,6 @@ if __name__ == '__main__':
 
 
     dataset = preprocessed_data['dataset']
-    print(dataset['train'].x.shape)
     num_features = dataset['train'].x.shape[1]
     train = dataset['train']
     val = dataset['val']
