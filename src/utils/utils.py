@@ -1,8 +1,10 @@
 import json
+import math
 
 import pandas as pd
 import numpy as np
 
+import tensorflow as tf
 # Labels normal data as 0, anomalies as 1
 def make_labels_binary(label_encoder, labels):
     normal_data_index = np.where(label_encoder.classes_ == 'BENIGN')[0][0]
@@ -45,3 +47,19 @@ def remove_infs(df):
     df = df.drop('Label', axis=1)
     indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)
     return df[indices_to_keep], labels[indices_to_keep]
+
+class DataSequence(tf.keras.utils.Sequence):
+    def __init__(self, x_set, y_set, batch_size):
+        self.x, self.y = x_set.astype(np.float32), y_set.astype(np.float32)
+        self.batch_size = batch_size
+
+    def __len__(self):
+        return math.ceil(len(self.x) / self.batch_size)
+
+    def __getitem__(self, idx):
+        batch_x = self.x[idx * self.batch_size:(idx + 1) *
+        self.batch_size]
+        batch_y = self.y[idx * self.batch_size:(idx + 1) *
+        self.batch_size]
+
+        return np.array(batch_x), np.array(batch_y)

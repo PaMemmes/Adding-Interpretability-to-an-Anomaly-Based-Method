@@ -10,7 +10,6 @@ def get_generator(config, num_features):
     generator.add(Activation('relu'))
 
     for _, layer in config['gen_layers'].items():
-        print(Activation(config['gen_activation']))
         generator.add(Dense(layer))
         generator.add(Activation(config['gen_activation']))
 
@@ -46,7 +45,6 @@ def get_discriminator(config, num_features):
 def make_gan_network(config, discriminator, generator, input_dim):
     discriminator.trainable = False
     gan_input = Input(shape=(input_dim,))
-    print('gan_input', gan_input.shape)
     x = generator(gan_input)
     print('x', x.shape)
     gan_output = discriminator(x)

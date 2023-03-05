@@ -6,6 +6,7 @@ from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from sklearn.model_selection import train_test_split
 import glob
 
+from utils.utils import DataSequence
 from utils.utils import remove_infs, make_labels_binary, subset_normal
 
 if __name__ =='__main__':
@@ -22,29 +23,39 @@ if __name__ =='__main__':
 
     int_labels = le.transform(labels)
 
-    x_train, x_test, y_train, y_test = train_test_split(df,
-                                                    int_labels,
-                                                    test_size=.15)
+    train_ratio = 0.65
+    val_ratio = 0.15
+    test_ratio = 0.2
+
+    x_train, x_test, y_train, y_test = train_test_split(df, int_labels, test_size=1-train_ratio)
+    x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size=test_ratio/(test_ratio + val_ratio))
     assert x_train.shape[0] == y_train.shape[0]
     assert x_test.shape[0] == y_test.shape[0]
     assert x_train.shape[1] == x_test.shape[1]
+    assert x_val.shape[0] == y_val.shape[0]
+    assert x_val.shape[1] ==  x_test.shape[1]
 
     y_train = make_labels_binary(le, y_train)
+    y_val = make_labels_binary(le, y_val)
     y_test = make_labels_binary(le, y_test)
 
     # Subsetting only Normal Network packets in training set
     x_train, y_train = subset_normal(x_train, y_train)
-
+    x_val, y_val = subset_normal(x_val, y_val)
     scaler = MinMaxScaler()
 
     x_train = scaler.fit_transform(x_train)
+    x_val = scaler.transform(x_val)
     x_test = scaler.transform(x_test)
 
+    train_sqc = DataSequence(x_train, y_train, 32)
+    val_sqc = DataSequence(x_val, y_val, 32)
+    test_sqc = DataSequence(x_test, y_test, 32)
+
     dataset = {}
-    dataset['x_train'] = x_train.astype(np.float32)
-    dataset['y_train'] = y_train.astype(np.float32)
-    dataset['x_test'] = x_test.astype(np.float32)
-    dataset['y_test'] = y_test.astype(np.float32)
+    dataset['train'] = train_sqc
+    dataset['val'] = val_sqc
+    dataset['test'] = test_sqc
 
     preprocessed_data = {
         'dataset': dataset,
