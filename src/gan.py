@@ -7,7 +7,6 @@ from tensorflow.keras import initializers, layers
 import pickle
 
 import keras_tuner
-
 import json
 
 
@@ -149,9 +148,10 @@ class HyperGAN(keras_tuner.HyperModel):
     def fit(self, hp, model, data, callbacks=None, **kwargs):
         x,y = data.x, data.y
         model.fit(x, y, batch_size=data.batch_size, **kwargs)
-        preds = model.discriminator.predict(x)
+        
+        #preds = model.discriminator.predict(x)
+        #score = self.score(y, preds)
 
-        score = self.score(y, preds)
         return (model.dis_loss_tracker.result().numpy() + model.gen_loss_tracker.result().numpy()) / 2
 
 
@@ -171,7 +171,6 @@ if __name__ == '__main__':
     train = dataset['train']
     val = dataset['val']
     test = dataset['test']
-    # train_dataset = tf.data.Dataset.from_tensor_slices((train_x, train_y))
 
     tuner = keras_tuner.BayesianOptimization(
         hypermodel=HyperGAN(num_features, config),
@@ -193,5 +192,4 @@ if __name__ == '__main__':
     hypermodel = HyperGAN(num_features, config)
     model = hypermodel.build(best_hp)
 
-    # hypermodel.fit(best_hp, model, train_x, train_y)
     hypermodel.fit(best_hp, model, train)
