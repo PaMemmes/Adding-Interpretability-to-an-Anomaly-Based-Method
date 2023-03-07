@@ -82,7 +82,7 @@ if __name__ =='__main__':
             print(f"Epoch {epoch} Batch {index} {batch_count} [D loss: {d_loss}] [G loss:{g_loss}]")
         
 
-        plot_losses(discriminator_loss, generator_loss, gan_loss, name + '/loss_gan.png')
+        plot_losses(discriminator_loss, generator_loss, name + '/loss_gan.png')
 
         nr_batches_test = np.ceil(x_test.shape[0] // config['batch_size']).astype(np.int32)
 
