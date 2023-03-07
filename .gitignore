@@ -8,6 +8,9 @@ suricata_analysis/theZoo_fragmented_random/*
 suricata_analysis/theZoo_unfragmented/*
 optims/*
 *.pyc
+src/experiments/*
 experiments/*
+*.pb
+*.index
 .coverage
 model_hyperparameter.ipynb
