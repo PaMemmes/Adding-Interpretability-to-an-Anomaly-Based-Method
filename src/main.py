@@ -7,7 +7,7 @@ import pickle
 
 from hyperopt import hyperopt
 from utils.utils import test_model
-from utils.network import HyperGAN
+from utils.wasserstein import HyperWGAN
 from utils.plots import plot_confusion_matrix, plot_roc, plot_losses, plot_precision_recall
 from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, confusion_matrix, accuracy_score
 
@@ -27,19 +27,18 @@ if __name__ == '__main__':
         config = json.loads(f.read())
 
 
-    dataset = preprocessed_data['dataset']
+    dataset = preprocessed_data['test_dataset']
     num_features = dataset['train'].x.shape[1]
     train = dataset['train']
-    val = dataset['val']
     test = dataset['test']
 
     best_hp = hyperopt()
     print("BEST HP: ", best_hp['Dropout'])
     #print("BEST HP: ", best_hp['activation function'])
-    for i in range(20):
+    for i in range(15):
         name = '../experiments/experiment' + str(i) + '_tuner'
         Path(name).mkdir(parents=True, exist_ok=True)
-        hypermodel = HyperGAN(num_features, config)
+        hypermodel = HyperWGAN(num_features, config)
         model = hypermodel.build(best_hp)
 
         hypermodel.fit(best_hp, model, train)
@@ -53,7 +52,7 @@ if __name__ == '__main__':
         normals = collections.Counter(test.y)[0]
         anomalies = collections.Counter(test.y)[1]
         anomalies_percentage = anomalies / (normals + anomalies)
-
+        print('anomalies_percentage', anomalies_percentage)
         # Obtaining the lowest "anomalies_percentage" score
         per = np.percentile(results, anomalies_percentage*100)
         y_pred = results.copy()
