@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from utils.utils import test_model
-from utils.network import HyperGAN
+from utils.wasserstein import HyperWGAN
 from utils.plots import plot_confusion_matrix, plot_roc, plot_losses, plot_precision_recall
 from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, confusion_matrix, accuracy_score
 
@@ -30,11 +30,11 @@ def hyperopt():
     test = dataset['test']
 
     tuner = keras_tuner.BayesianOptimization(
-        hypermodel=HyperGAN(num_features, config),
-        max_trials=50,
+        hypermodel=HyperWGAN(num_features, config),
+        max_trials=25,
         overwrite=True,
         directory="./experiments",
-        project_name="HyperGAN",
+        project_name="HyperWGAN",
     )
 
     tuner.search(
