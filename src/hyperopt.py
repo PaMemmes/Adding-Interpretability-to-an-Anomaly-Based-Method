@@ -5,7 +5,7 @@ import keras_tuner
 
 from utils.wasserstein import HyperWGAN
 
-def hyperopt():
+def hyperopt(num_trials):
     filename = '../data/preprocessed_data.pickle'
 
     input_file = open(filename, 'rb')
@@ -24,7 +24,7 @@ def hyperopt():
 
     tuner = keras_tuner.BayesianOptimization(
         hypermodel=HyperWGAN(num_features, config),
-        max_trials=25,
+        max_trials=num_trials,
         overwrite=True,
         directory="./experiments",
         project_name="HyperWGAN",
