@@ -135,7 +135,7 @@ class HyperGAN(keras_tuner.HyperModel):
         return model_gan
 
 
-    def mean_kl_score(self, y, preds):
+    def mean_bc_score(self, y, preds):
         results = []
         n_part = np.floor(len(y) / 10)
         for i in range(10):
@@ -147,7 +147,16 @@ class HyperGAN(keras_tuner.HyperModel):
             results.append(kl_div)
         return np.mean(results)
 
-
+    def mean_kl_score(self, y, preds):
+        results = []
+        n_part = np.floor(len(y) / 10)
+        for i in range(10):
+            ix_start, ix_end = int(i * n_part), int(i * n_part + n_part)
+            kl = tf.keras.losses.KLDivergence()
+            kl_div = kl(y[ix_start:ix_end], preds[ix_start:ix_end]).numpy()
+            results.append(kl_div)
+        return np.mean(results)
+    
     def fit(self, hp, model, data, callbacks=None, **kwargs):
         x,y = data.x, data.y
         model.fit(x, y, batch_size=data.batch_size, **kwargs)
