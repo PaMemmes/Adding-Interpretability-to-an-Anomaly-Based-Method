@@ -75,6 +75,7 @@ if __name__ =='__main__':
     test_dataset['test']  = test_set
     preprocessed_data = {
         'dataset': dataset,
+        'test_dataset': test_dataset
     }
 
     with open('../data/preprocessed_data.pickle', 'wb') as file:
