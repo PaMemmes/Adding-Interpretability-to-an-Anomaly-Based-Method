@@ -1,16 +1,9 @@
 import json
-import collections
 import pickle
 
 import keras_tuner
-import tensorflow as tf
-import numpy as np
-import pandas as pd
 
-from utils.utils import test_model
 from utils.wasserstein import HyperWGAN
-from utils.plots import plot_confusion_matrix, plot_roc, plot_losses, plot_precision_recall
-from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, confusion_matrix, accuracy_score
 
 def hyperopt():
     filename = '../data/preprocessed_data.pickle'
