@@ -34,14 +34,12 @@ if __name__ == '__main__':
     for i in range(NUM_RETRAINING):
         name = '../experiments/experiment' + str(i) + '_tuner'
         Path(name).mkdir(parents=True, exist_ok=True)
-        hypermodel = HyperWGAN(num_features, config)
+        hypermodel = HyperWGAN(num_features, config, discriminator_extra_steps=3, gp_weight=10.0)
         model = hypermodel.build(best_hp)
 
         hypermodel.fit(best_hp, model, train)
 
         results_df, results = test_model(hypermodel, test)
-        score_normal = results_df.loc[results_df['y_test'] == 0, 'results'].mean()
-        score_anomalous = results_df.loc[results_df['y_test'] == 1, 'results'].mean()
 
         normals = collections.Counter(test.y)[0]
         anomalies = collections.Counter(test.y)[1]

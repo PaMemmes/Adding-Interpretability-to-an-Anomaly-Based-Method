@@ -23,7 +23,7 @@ def hyperopt(num_trials):
     test = dataset['test']
 
     tuner = keras_tuner.BayesianOptimization(
-        hypermodel=HyperWGAN(num_features, config),
+        hypermodel=HyperWGAN(num_features, config, discriminator_extra_steps=3, gp_weight=10.0),
         max_trials=num_trials,
         overwrite=True,
         directory="./experiments",

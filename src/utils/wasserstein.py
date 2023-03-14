@@ -47,9 +47,7 @@ class WGAN(tf.keras.Model):
 
         batch_size = tf.shape(x)[0]
         for i in range(self.d_steps):
-            noise = tf.random.normal(
-                shape=(batch_size, self.num_features)
-            )
+            noise = tf.random.normal(shape=(batch_size, self.num_features))
             with tf.GradientTape() as tape:
                 fake_x = self.generator(noise, training=True)
                 fake_preds = self.discriminator(fake_x, training=True)
@@ -88,10 +86,12 @@ class WGAN(tf.keras.Model):
 
         
 class HyperWGAN(keras_tuner.HyperModel):
-    def __init__(self, num_features, config):
+    def __init__(self, num_features, config, discriminator_extra_steps, gp_weight):
         super(HyperWGAN, self).__init__()
         self.num_features = num_features
         self.config = config
+        self.discriminator_extra_steps = discriminator_extra_steps
+        self.gp_weight = gp_weight
 
     def discriminator_loss(self, real_img, fake_img):
         real_loss = tf.reduce_mean(real_img)
@@ -152,7 +152,7 @@ class HyperWGAN(keras_tuner.HyperModel):
         self.generator = self.get_generator(activation_dict['leaky_relu'])
 
 
-        model_gan = WGAN(self.discriminator, self.generator, self.num_features)
+        model_gan = WGAN(self.discriminator, self.generator, self.num_features, self.discriminator_extra_steps, self.gp_weight)
 
         self.make_optimizers()
         model_gan.compile(self.dis_optimizer, self.gen_optimizer, self.discriminator_loss, self.generator_loss)
@@ -182,9 +182,9 @@ class HyperWGAN(keras_tuner.HyperModel):
         return np.mean(results)
     
     def fit(self, hp, model, data, callbacks=None, **kwargs):
-        x,y = data.x, data.y
-        print('x.shape', x.shape)
-        print('y.shape', y.shape)
+        x, y = data.x, data.y
         model.fit(x, y, batch_size=data.batch_size, **kwargs)
-        
-        return (model.dis_loss_tracker.result().numpy() + model.gen_loss_tracker.result().numpy()) / 2
+        preds = model.discriminator.predict(x)
+        kl = self.mean_kl_score(y.to_numpy(), preds)
+        return kl
+        #return (model.dis_loss_tracker.result().numpy() + model.gen_loss_tracker.result().numpy()) / 2
