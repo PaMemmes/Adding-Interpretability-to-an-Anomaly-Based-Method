@@ -1,15 +1,9 @@
-import tensorflow as tf
-import numpy as np
-from sklearn.metrics import precision_recall_fscore_support
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Input, BatchNormalization, LeakyReLU, Dense, Reshape, Flatten, Activation, Dropout
 from tensorflow.keras import initializers, layers
-import pickle
-
+import tensorflow as tf
 import keras_tuner
-import json
-
-
+import numpy as np
 class GAN(tf.keras.Model):
     def __init__(self, discriminator, generator, num_features):
         super().__init__()
@@ -112,7 +106,7 @@ class HyperGAN(keras_tuner.HyperModel):
             generator.add(Dense(layer))
             generator.add(activation_function)
 
-        generator.add(Dense(num_features))
+        generator.add(Dense(self.num_features))
         generator.add(activation_function)
 
         return generator
@@ -120,7 +114,7 @@ class HyperGAN(keras_tuner.HyperModel):
 
     def build(self, hp):
         drop_rate = hp.Float('Dropout', min_value = 0, max_value = 0.30)
-        activation_function = hp.Choice('activation function', ['relu', 'leaky_relu', 'tanh'])
+        #activation_function = hp.Choice('activation function', ['relu', 'leaky_relu', 'tanh'])
 
 
         activation_dict = {
@@ -130,7 +124,7 @@ class HyperGAN(keras_tuner.HyperModel):
         }
 
         self.discriminator = self.get_discriminator(drop_rate)
-        self.generator = self.get_generator(activation_dict[activation_function])
+        self.generator = self.get_generator(activation_dict['relu'])
 
 
         model_gan = GAN(self.discriminator, self.generator, self.num_features)
@@ -141,55 +135,33 @@ class HyperGAN(keras_tuner.HyperModel):
         return model_gan
 
 
-    def score(self, y, y_pred):
-        return 1
+    def mean_bc_score(self, y, preds):
+        results = []
+        n_part = np.floor(len(y) / 10)
+        for i in range(10):
+            ix_start, ix_end = int(i * n_part), int(i * n_part + n_part)
+            #kl = tf.keras.losses.KLDivergence()
+            #kl_div = kl(y[ix_start:ix_end], preds[ix_start:ix_end]).numpy()
+            bc = tf.keras.losses.BinaryCrossentropy()
+            kl_div = bc(y[ix_start:ix_end], preds[ix_start:ix_end]).numpy()
+            results.append(kl_div)
+        return np.mean(results)
 
-
+    def mean_kl_score(self, y, preds):
+        results = []
+        n_part = np.floor(len(y) / 10)
+        for i in range(10):
+            ix_start, ix_end = int(i * n_part), int(i * n_part + n_part)
+            kl = tf.keras.losses.KLDivergence()
+            kl_div = kl(y[ix_start:ix_end], preds[ix_start:ix_end]).numpy()
+            results.append(kl_div)
+        return np.mean(results)
+    
     def fit(self, hp, model, data, callbacks=None, **kwargs):
         x,y = data.x, data.y
         model.fit(x, y, batch_size=data.batch_size, **kwargs)
         
-        #preds = model.discriminator.predict(x)
-        #score = self.score(y, preds)
-
-        return (model.dis_loss_tracker.result().numpy() + model.gen_loss_tracker.result().numpy()) / 2
-
-
-if __name__ == '__main__':
-    filename = '../data/preprocessed_data.pickle'
-
-    input_file = open(filename, 'rb')
-    preprocessed_data = pickle.load(input_file)
-    input_file.close()
-
-    with open('config.json', 'r', encoding='utf-8') as f:
-        config = json.loads(f.read())
-
-
-    dataset = preprocessed_data['dataset']
-    num_features = dataset['train'].x.shape[1]
-    train = dataset['train']
-    val = dataset['val']
-    test = dataset['test']
-
-    tuner = keras_tuner.BayesianOptimization(
-        hypermodel=HyperGAN(num_features, config),
-        max_trials=2,
-        overwrite=True,
-        directory="./experiments",
-        project_name="HyperGAN",
-    )
-
-    tuner.search(
-        train,
-        validation_data=(val.x, val.y)
-        )
-
-    tuner.results_summary()
-
-    best_hp = tuner.get_best_hyperparameters(5)[0]
-
-    hypermodel = HyperGAN(num_features, config)
-    model = hypermodel.build(best_hp)
-
-    hypermodel.fit(best_hp, model, train)
+        preds = model.discriminator.predict(x)
+        avg = self.mean_kl_score(y, preds)
+        return -avg
+        # return (model.dis_loss_tracker.result().numpy() + model.gen_loss_tracker.result().numpy()) / 2

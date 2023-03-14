@@ -48,6 +48,21 @@ def remove_infs(df):
     indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)
     return df[indices_to_keep], labels[indices_to_keep]
 
+def test_model(model, test):
+    nr_batches_test = np.ceil(test.x.shape[0] // test.batch_size).astype(np.int32)
+    results = []
+    for t in range(nr_batches_test + 1):
+        ran_from = t * test.batch_size
+        ran_to = (t + 1) * test.batch_size
+        image_batch = test.x[ran_from:ran_to]
+        tmp_rslt = model.discriminator.predict(x=image_batch, batch_size=test.batch_size, verbose=0)
+        results = np.append(results, tmp_rslt)
+    pd.options.display.float_format = '{:20,.7f}'.format
+    results_df = pd.concat([pd.DataFrame(results), pd.DataFrame(test.y)], axis=1)
+    results_df.columns = ['results', 'y_test']
+    return results_df, results
+
+
 class DataSequence(tf.keras.utils.Sequence):
     def __init__(self, x_set, y_set, batch_size):
         self.x, self.y = x_set.astype(np.float32), y_set.astype(np.float32)
