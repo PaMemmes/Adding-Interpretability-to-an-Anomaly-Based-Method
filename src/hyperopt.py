@@ -1,5 +1,4 @@
 import json
-import pickle
 
 import keras_tuner
 
@@ -12,10 +11,10 @@ def hyperopt(train, val, num_trials):
 
     num_features = train.x.shape[1]
     tuner = keras_tuner.BayesianOptimization(
-        hypermodel=HyperWGAN(num_features, config, discriminator_extra_steps=3, gp_weight=10.0),
+        hypermodel=HyperWGAN(num_features, config, discriminator_extra_steps=5, gp_weight=10.0),
         max_trials=num_trials,
         overwrite=True,
-        directory="./experiments",
+        directory="./hyperopt",
         project_name="HyperWGAN",
     )
 
