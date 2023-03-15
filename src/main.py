@@ -52,22 +52,24 @@ if __name__ == '__main__':
         anomalies_percentage = anomalies / (normals + anomalies)
 
         # Obtaining the lowest "anomalies_percentage" score
-        per = np.percentile(results, 0.1*100)
+        per = np.percentile(results, anomalies_percentage*100)
+        results = np.array(results)
         y_pred = results.copy()
-        y_pred = np.array(y_pred)
-        y_pred2 = y_pred.copy()
-        probas = np.vstack((1-y_pred, y_pred)).T
+        #y_pred2 = y_pred.copy()
+        probas = np.vstack((y_pred, 1-y_pred)).T
 
         # Thresholding based on the score
+        print('Ypred', y_pred)
+        print('Per', per)
         inds = y_pred > per
         inds_comp = y_pred <= per
         y_pred[inds] = 0
         y_pred[inds_comp] = 1
-
+        print('Ypred after: ', y_pred)
         precision, recall, f1, _ = precision_recall_fscore_support(test.y, y_pred, average='binary')
         accuracy = accuracy_score(test.y, y_pred)
 
-        fpr, tpr, thresholds = roc_curve(test.y, y_pred)
+        fpr, tpr, thresholds = roc_curve(test.y, results)
         
         
         # gmean = np.sqrt(tpr * (1 - fpr))
@@ -85,11 +87,11 @@ if __name__ == '__main__':
         # y_pred2[inds] = 0
         # y_pred2[inds_comp] = 1
 
-        auc_curve = auc(fpr, tpr)
+        auc = auc(fpr, tpr)
         cm = confusion_matrix(test.y, y_pred)
         
         plot_confusion_matrix(cm, name + '/confusion_gan_only_cic.png', 'GAN')
-        plot_roc(tpr, fpr, auc_curve, name + '/roc_gan_only_cic.png', 'GAN')
+        plot_roc(tpr, fpr, auc, name + '/roc_gan_only_cic.png', 'GAN')
         plot_precision_recall(test.y, probas, name + '/precision_recall_only_cic.png')
         results = {
                 'Normals (%)': 1 - anomalies_percentage,
@@ -100,6 +102,9 @@ if __name__ == '__main__':
                 'Precision': precision,
                 'Recall': recall,
                 'F1': f1,
+                'AUC': auc,
+                'TPR': tpr,
+                'FPR': fpr,
                 'Best HP: ': best_hp['Dropout']
         }
         saves.append(results)
