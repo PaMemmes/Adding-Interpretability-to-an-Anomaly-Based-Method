@@ -24,12 +24,18 @@ if __name__ == '__main__':
     with open('config.json', 'r', encoding='utf-8') as f:
         config = json.loads(f.read())
 
-    dataset = preprocessed_data['test_dataset']
-    num_features = dataset['train'].x.shape[1]
-    train = dataset['train']
-    test = dataset['test']
+    train_dataset = preprocessed_data['dataset']
+    train = train_dataset['train']
+    val = train_dataset['val']
+    best_hp = hyperopt(train, val, NUM_TRIALS)
 
-    best_hp = hyperopt(NUM_TRIALS)
+
+    test_dataset = preprocessed_data['test_dataset']
+    num_features = test_dataset['train'].x.shape[1]
+    train = test_dataset['train']
+    test = test_dataset['test']
+
+    
     
     for i in range(NUM_RETRAINING):
         name = '../experiments/experiment' + str(i) + '_tuner'

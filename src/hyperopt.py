@@ -5,23 +5,12 @@ import keras_tuner
 
 from utils.wasserstein import HyperWGAN
 
-def hyperopt(num_trials):
-    filename = '../data/preprocessed_data.pickle'
-
-    input_file = open(filename, 'rb')
-    preprocessed_data = pickle.load(input_file)
-    input_file.close()
+def hyperopt(train, val, num_trials):
 
     with open('config.json', 'r', encoding='utf-8') as f:
         config = json.loads(f.read())
 
-
-    dataset = preprocessed_data['dataset']
-    num_features = dataset['train'].x.shape[1]
-    train = dataset['train']
-    val = dataset['val']
-    test = dataset['test']
-
+    num_features = train.x.shape[1]
     tuner = keras_tuner.BayesianOptimization(
         hypermodel=HyperWGAN(num_features, config, discriminator_extra_steps=3, gp_weight=10.0),
         max_trials=num_trials,
