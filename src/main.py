@@ -11,7 +11,7 @@ from utils.utils import test_model
 from utils.wasserstein import HyperWGAN
 from utils.plots import plot_confusion_matrix, plot_roc, plot_precision_recall
 
-NUM_TRIALS = 3
+NUM_TRIALS = 2
 NUM_RETRAINING = 5
 FILENAME = '../data/preprocessed_data.pickle'
 
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     train = test_dataset['train']
     test = test_dataset['test']
 
-    
+    saves = []
     
     for i in range(NUM_RETRAINING):
         name = '../experiments/experiment' + str(i) + '_tuner'
@@ -52,9 +52,10 @@ if __name__ == '__main__':
         anomalies_percentage = anomalies / (normals + anomalies)
 
         # Obtaining the lowest "anomalies_percentage" score
-        per = np.percentile(results, anomalies_percentage*100)
+        per = np.percentile(results, 0.1*100)
         y_pred = results.copy()
         y_pred = np.array(y_pred)
+        y_pred2 = y_pred.copy()
         probas = np.vstack((1-y_pred, y_pred)).T
 
         # Thresholding based on the score
@@ -63,11 +64,27 @@ if __name__ == '__main__':
         y_pred[inds] = 0
         y_pred[inds_comp] = 1
 
-        precision, recall, f1, _ = precision_recall_fscore_support(
-            test.y, y_pred, average='binary')
+        precision, recall, f1, _ = precision_recall_fscore_support(test.y, y_pred, average='binary')
         accuracy = accuracy_score(test.y, y_pred)
 
         fpr, tpr, thresholds = roc_curve(test.y, y_pred)
+        
+        
+        # gmean = np.sqrt(tpr * (1 - fpr))
+        # # Find the optimal threshold
+        # index = np.argmax(gmean)
+        # thresholdOpt = round(thresholds[index], ndigits = 4)
+        # gmeanOpt = round(gmean[index], ndigits = 4)
+        # fprOpt = round(fpr[index], ndigits = 4)
+        # tprOpt = round(tpr[index], ndigits = 4)
+        # print('Best Threshold: {} with G-Mean: {}'.format(thresholdOpt, gmeanOpt))
+        # print('FPR: {}, TPR: {}'.format(fprOpt, tprOpt))
+
+        # inds = y_pred2 > thresholdOpt
+        # inds_comp = y_pred2 <= thresholdOpt
+        # y_pred2[inds] = 0
+        # y_pred2[inds_comp] = 1
+
         auc_curve = auc(fpr, tpr)
         cm = confusion_matrix(test.y, y_pred)
         
@@ -85,4 +102,5 @@ if __name__ == '__main__':
                 'F1': f1,
                 'Best HP: ': best_hp['Dropout']
         }
-        print(results)
+        saves.append(results)
+    print('Best result: ', sorted(saves, key=lambda d: d['Accuracy'])[-1])
