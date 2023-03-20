@@ -4,10 +4,12 @@ from tensorflow.keras import initializers, layers
 import tensorflow as tf
 import keras_tuner
 import numpy as np
+from utils.utils import test_model
+from sklearn.metrics import accuracy_score
 
 class WGAN(tf.keras.Model):
     def __init__(self, discriminator, generator, num_features, discriminator_extra_steps=3,
-        gp_weight=10.0):
+        gp_weight=5.0):
         super().__init__()
         self.discriminator = discriminator
         self.generator = generator
@@ -81,9 +83,19 @@ class WGAN(tf.keras.Model):
         preds = self.discriminator(x, training=False)
         loss = self.d_loss_function(y, preds)
         self.dis_loss_tracker.update_state(loss)
+        z = tf.py_function(func=calculate_accuracy, inp=[preds, y], Tout=tf.float32)
         return {m.name: m.result() for m in self.metrics}
 
-
+def calculate_accuracy(preds, y):
+    preds = preds.numpy()
+    per = np.percentile(preds, 0.55*100)
+    inds = preds > per
+    inds_comp = preds <= per
+    preds[inds] = 0
+    preds[inds_comp] = 1
+    acc = accuracy_score(preds, y)
+    print('Accuracy: ', acc)
+    return acc
         
 class HyperWGAN(keras_tuner.HyperModel):
     def __init__(self, num_features, config, discriminator_extra_steps, gp_weight):
@@ -102,8 +114,10 @@ class HyperWGAN(keras_tuner.HyperModel):
         return -tf.reduce_mean(fake_img)
 
     def make_optimizers(self):
-        self.dis_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5, beta_2=0.9)
-        self.gen_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5, beta_2=0.9)
+        #self.dis_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5, beta_2=0.9)
+        #self.gen_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5, beta_2=0.9)
+        self.dis_optimizer = tf.keras.optimizers.experimental.RMSprop()
+        self.gen_optimizer = tf.keras.optimizers.experimental.RMSprop()
 
     def get_discriminator(self, dropout):
 
@@ -186,5 +200,5 @@ class HyperWGAN(keras_tuner.HyperModel):
         model.fit(x, y, batch_size=data.batch_size, **kwargs)
         preds = model.discriminator.predict(x)
         kl = self.mean_kl_score(y.to_numpy(), preds)
-        return kl
-        #return (model.dis_loss_tracker.result().numpy() + model.gen_loss_tracker.result().numpy()) / 2
+        #return kl
+        return (model.dis_loss_tracker.result().numpy() + model.gen_loss_tracker.result().numpy()) / 2
