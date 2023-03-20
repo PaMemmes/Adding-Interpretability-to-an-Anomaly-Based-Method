@@ -1,16 +1,13 @@
 {
     "dis_layers":{
-        "first_layer":128,
+        "first_layer":256,
         "second_layer":128,
-        "third_layer":128,
-        "fourth_layer":128
+        "third_layer":256
     },
     "gen_layers":{
         "first_layer":64,
         "second_layer":128,
-        "third_layer":256,
-        "fourth_layer":256,
-        "fifth_layer":512
+        "third_layer":256
     },
     "dis_activation":"LeakyReLU",
     "gen_activation":"LeakyReLU",
