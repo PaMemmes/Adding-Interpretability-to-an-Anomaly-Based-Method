@@ -11,23 +11,18 @@ from utils.utils import remove_infs, make_labels_binary, subset_normal
 
 BATCH_SIZE = 256
 
-if __name__ =='__main__':
+def preprocess(subset=True):
     df = pd.read_csv('../data/cicids2017_kaggle/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv')
     df = df.rename(columns={' Label': 'Label'})
 
     before_removal = len(df)
     df, labels = remove_infs(df)
-    print(f'Length before NaN drop: {before_removal}, after NaN drop: {len(df)}\n \
-    The df is now {len(df)/before_removal} of its original size')
+    print(f'Length before NaN drop: {before_removal}, after NaN drop: {len(df)}\nThe df is now {len(df)/before_removal} of its original size')
 
     le = LabelEncoder()
     le.fit(labels)
 
     int_labels = le.transform(labels)
-
-    train_ratio = 0.65
-    val_ratio = 0.15
-    test_ratio = 0.2
 
     x_train, x_test, y_train, y_test = train_test_split(df, int_labels, test_size=0.2)
 
@@ -39,7 +34,8 @@ if __name__ =='__main__':
     y_test = make_labels_binary(le, y_test)
 
     # Subsetting only Normal Network packets in training set
-    x_train, y_train = subset_normal(x_train, y_train)
+    if subset is True:
+        x_train, y_train = subset_normal(x_train, y_train)
 
     scaler = MinMaxScaler()
 
@@ -53,8 +49,6 @@ if __name__ =='__main__':
     dataset['train'] = train_sqc
     dataset['test'] = test_sqc
 
-    print(train_sqc.x.shape)
-    print(test_sqc.x.shape)
     preprocessed_data = {
         'dataset': dataset
     }
