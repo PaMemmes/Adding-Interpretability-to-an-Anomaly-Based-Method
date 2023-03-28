@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 
-from src.utils.utils import make_labels_binary, subset_normal, save_results
+from src.utils.utils import make_labels_binary, subset, save_results
 
 @pytest.fixture
 def example_labels():
@@ -20,7 +20,7 @@ def example_le(example_labels):
 
 @pytest.fixture
 def example_df_labels():
-    return pd.DataFrame({'Label': [0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1]})
+    return pd.DataFrame({'label': [0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1]})
 
 @pytest.fixture
 def example_df():
@@ -38,7 +38,7 @@ def test_make_labels_binary(example_le):
 def test_subset_normal(example_df, example_df_labels):
     x_train = example_df
     y_train = example_df_labels
-    x_train, y_train = subset_normal(x_train, y_train)
+    x_train, y_train = subset(x_train, y_train)
     assert len(x_train) == 5
     assert len(y_train) == 5
     
