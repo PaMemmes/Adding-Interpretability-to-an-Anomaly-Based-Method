@@ -17,11 +17,37 @@ from sklearn.preprocessing import LabelEncoder
 from timeit import default_timer
 import matplotlib.pyplot as plt
 import pickle
+from collections import defaultdict
 
 FILENAME = '../data/preprocessed_data.pickle'
-name = '../experiments/xg/all'
+def calc_metrics(confusion_matrix):
+    met = defaultdict()
+    FP = confusion_matrix.sum(axis=0) - np.diag(confusion_matrix)  
+    FN = confusion_matrix.sum(axis=1) - np.diag(confusion_matrix)
+    TP = np.diag(confusion_matrix)
+    TN = confusion_matrix.sum() - (FP + FN + TP)
 
-def plot_confusion_matrix(cm, target_names, title='Confusion Matrix', cmap=plt.cm.Greens):
+    # Sensitivity, hit rate, recall, or true positive rate
+    met['TPR'] = (TP/(TP+FN)).tolist()
+    # Specificity or true negative rate
+    met['TNR'] = (TN/(TN+FP)).tolist()
+    # Precision or positive predictive value
+    met['PPV'] = (TP/(TP+FP)).tolist()
+    # Negative predictive value
+    met['NPV'] = (TN/(TN+FN)).tolist()
+    # Fall out or false positive rate
+    met['FPR'] = (FP/(FP+TN)).tolist()
+    # False negative rate
+    met['FNR'] = (FN/(TP+FN)).tolist()
+    # False discovery rate
+    met['FDR'] = (FP/(TP+FP)).tolist()
+
+    # Overall accuracy
+    met['ACC'] = ((TP+TN)/(TP+FP+FN+TN)).tolist()
+    return met
+
+
+def plot_confusion_matrix(cm, target_names, save, title='Confusion Matrix', cmap=plt.cm.Greens):
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
@@ -39,10 +65,12 @@ def plot_confusion_matrix(cm, target_names, title='Confusion Matrix', cmap=plt.c
                         verticalalignment='center')
     plt.ylabel('True Label')
     plt.xlabel('Predicted Label')
-    plt.savefig(name + 'xg.png')
+    plt.savefig(save + 'cm.png')
+    plt.close()
 
 
-def xg_main():
+def xg_main(save='xg'):
+    name = '../experiments/' + save + '/best/'
     input_file = open(FILENAME, 'rb')
     preprocessed_data = pickle.load(input_file)
     input_file.close()
@@ -83,16 +111,16 @@ def xg_main():
     pred_labels = (preds > threshold).astype(int)
     auc_x = roc_auc_score(true_labels, preds)
     accuracy = accuracy_score(true_labels, pred_labels)
-    results = confusion_matrix(true_labels, pred_labels) 
+    cm = confusion_matrix(true_labels, pred_labels) 
 
     precision, recall, f1, _ = precision_recall_fscore_support(test.y, pred_labels, average='binary')
     accuracy = accuracy_score(test.y, pred_labels)
     fpr, tpr, thresholds = roc_curve(test.y, preds)
     auc_val = auc(fpr, tpr)
-    plot_confusion_matrix(results, ['Normal','Anomaly'])
-    plot_roc(tpr, fpr, auc_val, name + '/roc_gan_only_cic.png', 'GAN')
+    plot_confusion_matrix(cm, ['Normal','Anomaly'], save=name)
+    plot_roc(tpr, fpr, auc_val, name + 'roc_gan_only_cic.png', 'GAN')
     preds = np.vstack((1-preds, preds)).T
-    plot_precision_recall(test.y, preds, name + '/precision_recall_only_cic.png')
+    plot_precision_recall(test.y, preds, name + 'precision_recall_only_cic.png')
     results = {
             'Accuracy': accuracy,
             'Precision': precision,
@@ -101,6 +129,13 @@ def xg_main():
             'AUC': auc_x
     }
     print(results)
-    with open('../experiments/' + 'xg' + '/best/best_model.json', 'w', encoding='utf-8') as f: 
+    metrics = calc_metrics(cm)
+    
+    d = dict(metrics)
+    print(d)
+    with open('../experiments/' + save + '/best/best_model.json', 'w', encoding='utf-8') as f: 
         json.dump(results, f, ensure_ascii=False, indent=4)
+        json.dump(d, f, ensure_ascii=False, indent=4)
 
+    model.save_model('models/' + save + '.model')
+    return model
