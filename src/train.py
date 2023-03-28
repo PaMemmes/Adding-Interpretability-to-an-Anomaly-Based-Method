@@ -37,10 +37,10 @@ def get_preds(results, test):
     inds_comp = y_pred <= per
     y_pred[inds] = 0
     y_pred[inds_comp] = 1
-    return y_pred, probas, per
+    return y_pred, probas, per, anomalies_percentage
 
-def train(model_name, num_trials, num_retraining, epochs):
-    EXPERIMENT = '../experiments/' + model_name + '/all/experiment'
+def train(model_name, num_trials, num_retraining, epochs, save=False):
+    experiment = '../experiments/' + save + '/all/experiment'
 
     input_file = open(FILENAME, 'rb')
     preprocessed_data = pickle.load(input_file)
@@ -56,11 +56,12 @@ def train(model_name, num_trials, num_retraining, epochs):
     num_features = train.x.shape[1]
 
     saves = []
-    
+    models = []
     for i in range(num_retraining):
         print('Starting experiment:', i)
-        name = EXPERIMENT + str(i) + '_tuner'
-        Path(name).mkdir(parents=True, exist_ok=True)
+        name = experiment + str(i) + '_tuner'
+        if save is not False:
+            Path(name).mkdir(parents=True, exist_ok=True)
         if model_name == 'wgan':
             hypermodel = HyperWGAN(num_features, config, discriminator_extra_steps=3, gp_weight=5.0)
         elif model_name == 'gan':
@@ -70,8 +71,8 @@ def train(model_name, num_trials, num_retraining, epochs):
         hypermodel.fit(best_hp, model, train, epochs=epochs)
 
         results_df, results = test_model(hypermodel, test)
-
-        y_pred, probas, per = get_preds(results, test)
+        models.append(hypermodel)
+        y_pred, probas, per, anomalies_percentage = get_preds(results, test)
 
         precision, recall, f1, _ = precision_recall_fscore_support(test.y, y_pred, average='binary')
         accuracy = accuracy_score(test.y, y_pred)
@@ -80,11 +81,13 @@ def train(model_name, num_trials, num_retraining, epochs):
         auc_val = auc(fpr, tpr)
         cm = confusion_matrix(test.y, y_pred)
         
-        plot_confusion_matrix(cm, name + '/confusion.png', model_name)
-        plot_roc(tpr, fpr, auc_val, name + '/roc.png', model_name)
-        plot_precision_recall(test.y, probas, name + '/precision_recall.png')
+        if save is not False:
+            plot_confusion_matrix(cm, name + '/confusion.png', save)
+            plot_roc(tpr, fpr, auc_val, name + '/roc.png', save)
+            plot_precision_recall(test.y, probas, name + '/precision_recall.png')
         results = {
-                'Anomalies': per,
+                'Anomalies percentage': anomalies_percentage,
+                'Cutoff': per,
                 'Mean Score for normal packets': results_df.loc[results_df['y_test'] == 0, 'results'].mean(),
                 'Mean Score for anomalous packets': results_df.loc[results_df['y_test'] == 1, 'results'].mean(),
                 'Accuracy': accuracy,
@@ -95,16 +98,18 @@ def train(model_name, num_trials, num_retraining, epochs):
                 'Best HP': best_hp['Dropout'],
                 'I':i
         }
-        with open(name + '/' + model_name + '.json', 'w', encoding='utf-8') as f: 
-            json.dump(results, f, ensure_ascii=False, indent=4)
-        print(results)
+        if save is not False:
+            with open(name + '/' + save + '.json', 'w', encoding='utf-8') as f: 
+                json.dump(results, f, ensure_ascii=False, indent=4)
         saves.append(results)
     
     best_res = sorted(saves, key=lambda d: d['Accuracy'])[-1]
     print('Best result: ', best_res)
-    shutil.copy(EXPERIMENT + str(best_res['I']) + '_tuner' + '/confusion.png', '../experiments/' + model_name + '/best/confusion.png')
-    shutil.copy(EXPERIMENT + str(best_res['I']) + '_tuner' + '/roc.png', '../experiments/' + model_name + '/best/roc.png')
-    shutil.copy(EXPERIMENT + str(best_res['I']) + '_tuner' + '/precision_recall.png', '../experiments/' + model_name + '/best/precision_recall.png')
+    shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/confusion.png', '../experiments/' + save + '/best/confusion.png')
+    shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/roc.png', '../experiments/' + save + '/best/roc.png')
+    shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/precision_recall.png', '../experiments/' + save + '/best/precision_recall.png')
    
-    with open('../experiments/' + model_name + '/best/best_model.json', 'w', encoding='utf-8') as f: 
-        json.dump(best_res, f, ensure_ascii=False, indent=4)
+    if save is not False:
+        with open('../experiments/' + save + '/best/best_model.json', 'w', encoding='utf-8') as f: 
+            json.dump(best_res, f, ensure_ascii=False, indent=4)
+    return models[best_res['I']]
