@@ -1,92 +1,37 @@
-import pickle
-from pathlib import Path
-
-import json
-import collections
-import pickle
-
-from hyperopt import hyperopt
-from utils.utils import test_model
-from utils.wasserstein import HyperWGAN
-from utils.plots import plot_confusion_matrix, plot_roc, plot_losses, plot_precision_recall
-from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, confusion_matrix, accuracy_score
-
+import argparse
+from train import train 
+from xg import xg_main
+from preprocess import preprocess
+from interpretable import interpret_tree
 import tensorflow as tf
-import numpy as np
-import pandas as pd
 
-if __name__ == '__main__':
-
-    filename = '../data/preprocessed_data.pickle'
-
-    input_file = open(filename, 'rb')
-    preprocessed_data = pickle.load(input_file)
-    input_file.close()
-
-    with open('config.json', 'r', encoding='utf-8') as f:
-        config = json.loads(f.read())
+BATCH_SIZE = 256
+NUM_GEN_DATA = 500
 
 
-    dataset = preprocessed_data['test_dataset']
-    num_features = dataset['train'].x.shape[1]
-    train = dataset['train']
-    test = dataset['test']
+if __name__ =='__main__':
 
-    best_hp = hyperopt()
-    print("BEST HP: ", best_hp['Dropout'])
-    #print("BEST HP: ", best_hp['activation function'])
-    for i in range(15):
-        name = '../experiments/experiment' + str(i) + '_tuner'
-        Path(name).mkdir(parents=True, exist_ok=True)
-        hypermodel = HyperWGAN(num_features, config)
-        model = hypermodel.build(best_hp)
+    parser = argparse.ArgumentParser('python3 main.py')
+    parser.add_argument('file', help='Model to choose: [xg, wgan, gan, combined]', type=str)
+    parser.add_argument('trials', help='Number of trials to hyperopt: [0, inf]', type=int)
+    parser.add_argument('retraining', help='Number of times the hyperoptimized model should be retrained', type=int)
+    parser.add_argument('epochs', help='Number of epochs to train: [0, inf]', type=int)
+    args = parser.parse_args()
 
-        hypermodel.fit(best_hp, model, train)
-
-        results_df, results = test_model(hypermodel, test)
-        score_normal = results_df.loc[results_df['y_test'] == 0, 'results'].mean()
-        score_anomalous = results_df.loc[results_df['y_test'] == 1, 'results'].mean()
-
-        print('Mean score for normal packets :', score_normal)
-        print('Mean score for anomalous packets :', score_anomalous)
-        normals = collections.Counter(test.y)[0]
-        anomalies = collections.Counter(test.y)[1]
-        anomalies_percentage = anomalies / (normals + anomalies)
-        print('anomalies_percentage', anomalies_percentage)
-        # Obtaining the lowest "anomalies_percentage" score
-        per = np.percentile(results, anomalies_percentage*100)
-        y_pred = results.copy()
-        y_pred = np.array(y_pred)
-        probas = np.vstack((1-y_pred, y_pred)).T
-        
-        plot_precision_recall(test.y, probas, name + '/precision_recall_only_cic.png')
-        
-        # Thresholding based on the score
-        inds = y_pred > per
-        inds_comp = y_pred <= per
-        y_pred[inds] = 0
-        y_pred[inds_comp] = 1
-
-        precision, recall, f1, _ = precision_recall_fscore_support(
-            test.y, y_pred, average='binary')
-        accuracy = accuracy_score(test.y, y_pred)
-        print('Accuracy Score :', accuracy)
-        print('Precision :', precision)
-        print('Recall :', recall)
-        print('F1 :', f1)
-
-        fpr, tpr, thresholds = roc_curve(test.y, y_pred)
-        auc_curve = auc(fpr, tpr)
-        plot_roc(tpr, fpr, auc_curve, name + '/roc_gan_only_cic.png', 'GAN')
-        cm = confusion_matrix(test.y, y_pred)
-        plot_confusion_matrix(cm, name + '/confusion_gan_only_cic.png', 'GAN')
-        
-        results = {
-                'Normals (%)': 1 - anomalies_percentage,
-                'Anomalies (%)': anomalies_percentage,
-                'Mean Score for normal packets': results_df.loc[results_df['y_test'] == 0, 'results'].mean(),
-                'Mean Score for anomalous packets': results_df.loc[results_df['y_test'] == 1, 'results'].mean(),
-                'Accuracy': accuracy,
-                'Precision': precision,
-                'Recall': recall,
-                'F1': f1}
+    if args.file == 'xg':
+        preprocess(kind=None)
+        xg_main('xg')
+    elif args.file =='combined':
+        train_data = preprocess(kind='anomaly')
+        model = train('wgan', args.trials, args.retraining, args.epochs, save='combined')
+        gen_data = []
+        for i in range(NUM_GEN_DATA):
+            noise = tf.random.normal(shape=(BATCH_SIZE, train_data.x.shape[1]))
+            fake_x = model.generator(noise, training=False)
+            gen_data.append(fake_x)
+        preprocess(kind=None, add_data=gen_data)
+        model = xg_main(save='combined')
+        interpret_tree(model, save='combined')
+    elif args.file == 'wgan' or args.file == 'gan':
+        preprocess(kind='normal')
+        train(args.file, args.trials, args.retraining, args.epochs, save=args.file)
