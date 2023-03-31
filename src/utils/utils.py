@@ -3,6 +3,7 @@ import math
 
 import pandas as pd
 import numpy as np
+from collections import defaultdict
 
 import tensorflow as tf
 # Labels normal data as 0, anomalies as 1
@@ -63,6 +64,32 @@ def test_model(model, test):
     results_df = pd.concat([pd.DataFrame(results), pd.DataFrame(test.y)], axis=1)
     results_df.columns = ['results', 'y_test']
     return results_df, results
+
+def calc_metrics(confusion_matrix):
+    met = defaultdict()
+    FP = confusion_matrix.sum(axis=0) - np.diag(confusion_matrix)  
+    FN = confusion_matrix.sum(axis=1) - np.diag(confusion_matrix)
+    TP = np.diag(confusion_matrix)
+    TN = confusion_matrix.sum() - (FP + FN + TP)
+
+    # Sensitivity, hit rate, recall, or true positive rate
+    met['TPR'] = (TP/(TP+FN)).tolist()
+    # Specificity or true negative rate
+    met['TNR'] = (TN/(TN+FP)).tolist()
+    # Precision or positive predictive value
+    met['PPV'] = (TP/(TP+FP)).tolist()
+    # Negative predictive value
+    met['NPV'] = (TN/(TN+FN)).tolist()
+    # Fall out or false positive rate
+    met['FPR'] = (FP/(FP+TN)).tolist()
+    # False negative rate
+    met['FNR'] = (FN/(TP+FN)).tolist()
+    # False discovery rate
+    met['FDR'] = (FP/(TP+FP)).tolist()
+
+    # Overall accuracy
+    met['ACC'] = ((TP+TN)/(TP+FP+FN+TN)).tolist()
+    return met
 
 
 class DataSequence(tf.keras.utils.Sequence):

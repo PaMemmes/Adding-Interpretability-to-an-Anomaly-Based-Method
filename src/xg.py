@@ -14,59 +14,35 @@ from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, con
 from utils.plots import  plot_roc, plot_precision_recall
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from timeit import default_timer
+
+from utils.utils import calc_metrics
+from utils.plots import plot_confusion_matrix
 import matplotlib.pyplot as plt
 import pickle
-from collections import defaultdict
 
 FILENAME = '../data/preprocessed_data.pickle'
-def calc_metrics(confusion_matrix):
-    met = defaultdict()
-    FP = confusion_matrix.sum(axis=0) - np.diag(confusion_matrix)  
-    FN = confusion_matrix.sum(axis=1) - np.diag(confusion_matrix)
-    TP = np.diag(confusion_matrix)
-    TN = confusion_matrix.sum() - (FP + FN + TP)
-
-    # Sensitivity, hit rate, recall, or true positive rate
-    met['TPR'] = (TP/(TP+FN)).tolist()
-    # Specificity or true negative rate
-    met['TNR'] = (TN/(TN+FP)).tolist()
-    # Precision or positive predictive value
-    met['PPV'] = (TP/(TP+FP)).tolist()
-    # Negative predictive value
-    met['NPV'] = (TN/(TN+FN)).tolist()
-    # Fall out or false positive rate
-    met['FPR'] = (FP/(FP+TN)).tolist()
-    # False negative rate
-    met['FNR'] = (FN/(TP+FN)).tolist()
-    # False discovery rate
-    met['FDR'] = (FP/(TP+FP)).tolist()
-
-    # Overall accuracy
-    met['ACC'] = ((TP+TN)/(TP+FP+FN+TN)).tolist()
-    return met
 
 
-def plot_confusion_matrix(cm, target_names, save, title='Confusion Matrix', cmap=plt.cm.Greens):
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.title(title)
-    plt.colorbar()
-    tick_marks = np.arange(len(target_names))
-    plt.xticks(tick_marks, target_names, rotation=45)
-    plt.yticks(tick_marks, target_names)
-    plt.tight_layout()
+# def plot_confusion_matrix(cm, target_names, save, title='Confusion Matrix', cmap=plt.cm.Greens):
+#     plt.imshow(cm, interpolation='nearest', cmap=cmap)
+#     plt.title(title)
+#     plt.colorbar()
+#     tick_marks = np.arange(len(target_names))
+#     plt.xticks(tick_marks, target_names, rotation=45)
+#     plt.yticks(tick_marks, target_names)
+#     plt.tight_layout()
 
-    width, height = cm.shape
+#     width, height = cm.shape
 
-    for x in range(width):
-        for y in range(height):
-            plt.annotate(str(cm[x][y]), xy=(y, x), 
-                        horizontalalignment='center',
-                        verticalalignment='center')
-    plt.ylabel('True Label')
-    plt.xlabel('Predicted Label')
-    plt.savefig(save + 'cm.png')
-    plt.close()
+#     for x in range(width):
+#         for y in range(height):
+#             plt.annotate(str(cm[x][y]), xy=(y, x), 
+#                         horizontalalignment='center',
+#                         verticalalignment='center')
+#     plt.ylabel('True Label')
+#     plt.xlabel('Predicted Label')
+#     plt.savefig(save + 'cm.png')
+#     plt.close()
 
 
 def xg_main(save='xg'):
@@ -117,7 +93,7 @@ def xg_main(save='xg'):
     accuracy = accuracy_score(test.y, pred_labels)
     fpr, tpr, thresholds = roc_curve(test.y, preds)
     auc_val = auc(fpr, tpr)
-    plot_confusion_matrix(cm, ['Normal','Anomaly'], save=name)
+    plot_confusion_matrix(cm, savefile=name+'xg.png', name='xg')
     plot_roc(tpr, fpr, auc_val, name + 'roc_gan_only_cic.png', 'GAN')
     preds = np.vstack((1-preds, preds)).T
     plot_precision_recall(test.y, preds, name + 'precision_recall_only_cic.png')
