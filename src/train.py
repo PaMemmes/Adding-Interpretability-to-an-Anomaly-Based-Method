@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, confusion_matrix, accuracy_score
 
 from hyperopt import hyperopt
-from utils.utils import test_model
+from utils.utils import test_model, calc_metrics
 from utils.wasserstein import HyperWGAN
 from utils.gan import HyperGAN
 from utils.plots import plot_confusion_matrix, plot_roc, plot_precision_recall
@@ -80,7 +80,8 @@ def train(model_name, num_trials, num_retraining, epochs, save=False):
         
         auc_val = auc(fpr, tpr)
         cm = confusion_matrix(test.y, y_pred)
-        
+        mets = calc_metrics(cm)
+        d = dict(mets)
         if save is not False:
             plot_confusion_matrix(cm, name + '/confusion.png', save)
             plot_roc(tpr, fpr, auc_val, name + '/roc.png', save)
@@ -96,6 +97,7 @@ def train(model_name, num_trials, num_retraining, epochs, save=False):
                 'F1': f1,
                 'AUC': auc_val,
                 'Best HP': best_hp['Dropout'],
+                'Metrics': d,
                 'I':i
         }
         if save is not False:
