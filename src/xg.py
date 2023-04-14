@@ -15,6 +15,7 @@ from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, con
 from utils.plots import  plot_roc, plot_precision_recall
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import RandomizedSearchCV
 
 from utils.utils import calc_metrics
 from utils.plots import plot_confusion_matrix
@@ -54,15 +55,22 @@ def xg_main(save='xg', feature_weights=[0.9, 0.1]):
         'objective':         'binary:logistic',
         'verbose':           True
     }
+    hyperparameter_grid = {
+        'max_depth': [3, 6, 9],
+        'learning_rate': [0.05, 0.1, 0.20],
+        'feature_weights': [[0, 1], [0, 1]]
+    }
     dtrain = xgb.DMatrix(train.x, label=train.y, feature_weights=feature_weights)
     dtest = xgb.DMatrix(test.x, label=test.y, feature_weights=feature_weights)
-    evals = [(dtest, 'test',), (dtrain, 'train')]
-    num_rounds = params['num_rounds']
-    model = xgb.train(params, dtrain, num_rounds, evals=evals)
+    bst = xgb.XGBClassifier(**params)
+    clf = RandomizedSearchCV(bst, hyperparameter_grid, random_state=0)
+    model = clf.fit(train.x, train.y)
+    print(model.best_params_)
+
     threshold = .5
     true_labels = test.y.astype(int)
     true_labels.sum()
-    preds = model.predict(dtest)
+    preds = model.predict(test.x)
     pred_labels = (preds > threshold).astype(int)
     auc_x = roc_auc_score(true_labels, preds)
     accuracy = accuracy_score(true_labels, pred_labels)
@@ -93,5 +101,5 @@ def xg_main(save='xg', feature_weights=[0.9, 0.1]):
         json.dump(results, f, ensure_ascii=False, indent=4)
         json.dump(d, f, ensure_ascii=False, indent=4)
 
-    model.save_model('models/' + save + '.model')
-    return model
+    model.best_estimator_.save_model('models/' + save + '.model')
+    return model.best_estimator_
