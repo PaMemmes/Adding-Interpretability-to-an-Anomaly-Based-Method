@@ -196,11 +196,17 @@ if __name__ == '__main__':
     
     plot_alert_distribution(total_signatures_fragmented, severity_dict_fragmented, save='plots/alert_dist_' + 'fragmented.pdf')
     plot_alert_distribution(total_signatures_unfragmented, severity_dict_unfragmented, save='plots/alert_dist_' + 'unfragmented.pdf')
-    #plot_severity_distribution(total_severity, save='plots/severity_dist' + category)
 
-    #file = 'theZoo' + category + '/All.ElectroRAT/eve.json'
-    #json_data = get_json_data(file)
-    #alerts, packets = get_alerts_and_packets(json_data)
-    #nmbr_signatures, severity = get_signatures(alerts)
+    file = 'theZoo_unfragmented/All.ElectroRAT/eve.json'
+    json_data = get_json_data(file)
+    alerts, packets = get_alerts_and_packets(json_data)
+    nmbr_signatures, severity = get_signatures(alerts)
 
-    #plot_alerts(nmbr_signatures, file, save=f'plots/All.ElectroRAT' + category + '.png')
+    plot_alerts(nmbr_signatures, file, save=f'plots/All.ElectroRAT_unfragmented.pdf')
+
+    file = 'theZoo_fragmented/All.ElectroRAT/eve.json'
+    json_data = get_json_data(file)
+    alerts, packets = get_alerts_and_packets(json_data)
+    nmbr_signatures, severity = get_signatures(alerts)
+
+    plot_alerts(nmbr_signatures, file, save=f'plots/All.ElectroRAT_fragmented.pdf')
