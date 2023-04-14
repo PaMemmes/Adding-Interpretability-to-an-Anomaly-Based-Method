@@ -15,8 +15,7 @@ def preprocess(kind='normal', add_data=None):
     df = pd.read_csv('../data/cicids2017_kaggle/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv')
     df = df.rename(columns={' Label': 'label'})
     df_cols = list(df)
-    print(df)
-    print('Original length:', len(df))
+
     if add_data is not None:
         x = np.array(add_data)
         x = np.array(x).reshape((x.shape[0]*x.shape[1]), x.shape[2])
@@ -29,11 +28,10 @@ def preprocess(kind='normal', add_data=None):
         le.fit(labels_add)
         int_labels_add = le.transform(labels_add)
         y_train_add = int_labels_add
-    
+
     before_removal = len(df)
     df, labels = remove_infs(df)
     print(f'Length before NaN drop: {before_removal}, after NaN drop: {len(df)}\nThe df is now {len(df)/before_removal} of its original size')
-    print('LABELS', labels)
     le = LabelEncoder()
     le.fit(labels)
     int_labels = le.transform(labels)
@@ -62,24 +60,12 @@ def preprocess(kind='normal', add_data=None):
 
     if add_data is not None:
         x_train_add = x_train_add.to_numpy()
-        print('x_train.shape', x_train.shape)
-        print('x_train_add.shape', x_train_add.shape)
-        print('y_train.shape', y_train.shape)
-        print('y_train_add.shape', y_train_add.shape)
         x_train = np.vstack((x_train, x_train_add))
         y_train = np.concatenate((y_train, y_train_add))
-        print('x_train.shape', x_train.shape)
-        print('x_train_add.shape', x_train_add.shape)
-        print('y_train.shape', y_train.shape)
-        print('y_train_add.shape', y_train_add.shape)
-
-        print('x_train', x_train)
-        print('x_train_add', x_train_add)
-        print('y_train_add', y_train_add)
-        
     train_sqc = DataSequence(x_train, y_train, batch_size=BATCH_SIZE)
     test_sqc = DataSequence(x_test, y_test, batch_size=BATCH_SIZE)
-
+    print('Train data has shape', train_sqc.x.shape, train_sqc.y.shape)
+    print('Test data has shape', test_sqc.x.shape, test_sqc.y.shape)
     dataset = {}
     dataset['train'] = train_sqc
     dataset['test'] = test_sqc
