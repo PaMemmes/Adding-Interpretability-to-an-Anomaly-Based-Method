@@ -41,7 +41,7 @@ def get_preds(results, test):
 
 def train(model_name, num_trials, num_retraining, epochs, save=False):
     experiment = '../experiments/' + save + '/all/experiment'
-
+    Path('../experiments/' + save + '/best/').mkdir(parents=True, exist_ok=True)
     input_file = open(FILENAME, 'rb')
     preprocessed_data = pickle.load(input_file)
     input_file.close()
@@ -59,9 +59,10 @@ def train(model_name, num_trials, num_retraining, epochs, save=False):
     models = []
     for i in range(num_retraining):
         print('Starting experiment:', i)
-        name = experiment + str(i) + '_tuner'
         if save is not False:
+            name = experiment + str(i) + '_tuner'
             Path(name).mkdir(parents=True, exist_ok=True)
+            
         if model_name == 'wgan':
             hypermodel = HyperWGAN(num_features, config, discriminator_extra_steps=3, gp_weight=5.0)
         elif model_name == 'gan':
@@ -112,6 +113,6 @@ def train(model_name, num_trials, num_retraining, epochs, save=False):
     shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/precision_recall.png', '../experiments/' + save + '/best/precision_recall.png')
    
     if save is not False:
-        with open('../experiments/' + save + '/best/best_model.json', 'w', encoding='utf-8') as f: 
+        with open('../experiments/' + save + '/best/best_model_wgan.json', 'w', encoding='utf-8') as f: 
             json.dump(best_res, f, ensure_ascii=False, indent=4)
     return models[best_res['I']]

@@ -1,3 +1,4 @@
+from pathlib import Path
 import xgboost as xgb
 import numpy as np
 from collections import OrderedDict
@@ -24,6 +25,7 @@ FILENAME = '../data/preprocessed_data.pickle'
 
 def xg_main(save='xg', feature_weights=[0.9, 0.1]):
     name = '../experiments/' + save + '/best/'
+    Path(name).mkdir(parents=True, exist_ok=True)
     input_file = open(FILENAME, 'rb')
     preprocessed_data = pickle.load(input_file)
     input_file.close()
@@ -56,7 +58,7 @@ def xg_main(save='xg', feature_weights=[0.9, 0.1]):
     dtest = xgb.DMatrix(test.x, label=test.y, feature_weights=feature_weights)
     evals = [(dtest, 'test',), (dtrain, 'train')]
     num_rounds = params['num_rounds']
-    model = xgb.train(params, dtrain, num_rounds,evals=evals)
+    model = xgb.train(params, dtrain, num_rounds, evals=evals)
     threshold = .5
     true_labels = test.y.astype(int)
     true_labels.sum()
@@ -71,10 +73,10 @@ def xg_main(save='xg', feature_weights=[0.9, 0.1]):
     accuracy = accuracy_score(test.y, pred_labels)
     fpr, tpr, thresholds = roc_curve(test.y, preds)
     auc_val = auc(fpr, tpr)
-    plot_confusion_matrix(cm, savefile=name+'xg.png', name='xg')
-    plot_roc(tpr, fpr, auc_val, name + 'roc_gan_only_cic.png', 'GAN')
+    plot_confusion_matrix(cm, savefile=name + save + '_cm.pdf', name=save)
+    plot_roc(tpr, fpr, auc_val, name + save + '_roc.pdf', 'GAN')
     preds = np.vstack((1-preds, preds)).T
-    plot_precision_recall(test.y, preds, name + 'precision_recall_only_cic.png')
+    plot_precision_recall(test.y, preds, name + save + '_precision_recall.pdf')
     results = {
             'Accuracy': accuracy,
             'Precision': precision,
@@ -87,7 +89,7 @@ def xg_main(save='xg', feature_weights=[0.9, 0.1]):
     
     d = dict(metrics)
     print(d)
-    with open('../experiments/' + save + '/best/best_model.json', 'w', encoding='utf-8') as f: 
+    with open('../experiments/' + save + '/best/' + save + '_best_model.json', 'w', encoding='utf-8') as f: 
         json.dump(results, f, ensure_ascii=False, indent=4)
         json.dump(d, f, ensure_ascii=False, indent=4)
 
