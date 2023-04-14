@@ -4,7 +4,7 @@ from xg import xg_main
 from preprocess import preprocess
 from interpretable import interpret_tree
 import tensorflow as tf
-
+import collections
 BATCH_SIZE = 256
 NUM_GEN_DATA = 500
 
@@ -30,7 +30,10 @@ if __name__ =='__main__':
             fake_x = model.generator(noise, training=False)
             gen_data.append(fake_x)
         preprocess(kind=None, add_data=gen_data)
-        model = xg_main(save='combined')
+        normals = collections.Counter(train_data.y)[0]
+        anomalies = collections.Counter(train_data.y)[1]
+        anom_percent = anomalies / (normals + anomalies)
+        model = xg_main(save='combined', feature_weights=[1-anom_percent, anom_percent])
         interpret_tree(model, save='combined')
     elif args.file == 'wgan' or args.file == 'gan':
         preprocess(kind='normal')
