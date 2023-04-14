@@ -18,26 +18,17 @@ def preprocess(kind='normal', add_data=None):
     print(df)
     print('Original length:', len(df))
     if add_data is not None:
-        prev_len = len(df)
-        
-
         x = np.array(add_data)
         x = np.array(x).reshape((x.shape[0]*x.shape[1]), x.shape[2])
         y = np.array(['ANOMALY' for i in range(len(x))]).reshape(len(x), 1)
         data = np.concatenate((x,y), axis=1)
         df_add = pd.DataFrame(data, columns=df_cols)
-        #before_removal = len(df_add)
-        #df_add, labels_add = remove_infs(df_add)
-        #print(f'Length before NaN drop: {before_removal}, after NaN drop: {len(df_add)}\nThe df is now {len(df_add)/before_removal} of its original size')
-        # labels_add = df_add.iloc[:, -1:]
         labels_add = df_add['label']
         x_train_add = df_add.drop('label',axis=1)
         le = LabelEncoder()
         le.fit(labels_add)
         int_labels_add = le.transform(labels_add)
         y_train_add = int_labels_add
-        #df = df.append(pd.DataFrame(data, columns=list(df)), ignore_index=True)
-        #print('Combined length: ', len(df))
     
     before_removal = len(df)
     df, labels = remove_infs(df)
