@@ -22,30 +22,7 @@ import pickle
 
 FILENAME = '../data/preprocessed_data.pickle'
 
-
-# def plot_confusion_matrix(cm, target_names, save, title='Confusion Matrix', cmap=plt.cm.Greens):
-#     plt.imshow(cm, interpolation='nearest', cmap=cmap)
-#     plt.title(title)
-#     plt.colorbar()
-#     tick_marks = np.arange(len(target_names))
-#     plt.xticks(tick_marks, target_names, rotation=45)
-#     plt.yticks(tick_marks, target_names)
-#     plt.tight_layout()
-
-#     width, height = cm.shape
-
-#     for x in range(width):
-#         for y in range(height):
-#             plt.annotate(str(cm[x][y]), xy=(y, x), 
-#                         horizontalalignment='center',
-#                         verticalalignment='center')
-#     plt.ylabel('True Label')
-#     plt.xlabel('Predicted Label')
-#     plt.savefig(save + 'cm.png')
-#     plt.close()
-
-
-def xg_main(save='xg'):
+def xg_main(save='xg', feature_weights=[0.9, 0.1]):
     name = '../experiments/' + save + '/best/'
     input_file = open(FILENAME, 'rb')
     preprocessed_data = pickle.load(input_file)
@@ -75,8 +52,8 @@ def xg_main(save='xg'):
         'objective':         'binary:logistic',
         'verbose':           True
     }
-    dtrain = xgb.DMatrix(train.x, label=train.y, feature_weights=[0.9,0.1])
-    dtest = xgb.DMatrix(test.x, label=test.y, feature_weights=[0.9,0.1])
+    dtrain = xgb.DMatrix(train.x, label=train.y, feature_weights=feature_weights)
+    dtest = xgb.DMatrix(test.x, label=test.y, feature_weights=feature_weights)
     evals = [(dtest, 'test',), (dtrain, 'train')]
     num_rounds = params['num_rounds']
     model = xgb.train(params, dtrain, num_rounds,evals=evals)
@@ -87,7 +64,8 @@ def xg_main(save='xg'):
     pred_labels = (preds > threshold).astype(int)
     auc_x = roc_auc_score(true_labels, preds)
     accuracy = accuracy_score(true_labels, pred_labels)
-    cm = confusion_matrix(true_labels, pred_labels) 
+    cm = confusion_matrix(true_labels, pred_labels)
+    cm_norm = confusion_matrix(true_labels, pred_labels, normalize='all')
 
     precision, recall, f1, _ = precision_recall_fscore_support(test.y, pred_labels, average='binary')
     accuracy = accuracy_score(test.y, pred_labels)
