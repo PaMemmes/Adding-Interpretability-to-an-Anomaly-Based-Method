@@ -67,10 +67,15 @@ def test_model(model, test):
 
 def calc_metrics(confusion_matrix):
     met = defaultdict()
-    FP = confusion_matrix.sum(axis=0) - np.diag(confusion_matrix)  
-    FN = confusion_matrix.sum(axis=1) - np.diag(confusion_matrix)
+    
+    FP = (confusion_matrix.sum(axis=0) - np.diag(confusion_matrix))
+    FN = (confusion_matrix.sum(axis=1) - np.diag(confusion_matrix))
     TP = np.diag(confusion_matrix)
-    TN = confusion_matrix.sum() - (FP + FN + TP)
+    TN = (confusion_matrix.sum() - (FP + FN + TP))
+    FP = FP[1]
+    FN = FN[1]
+    TP = TP[1]
+    TN = TN[1]
 
     # Sensitivity, hit rate, recall, or true positive rate
     met['TPR'] = (TP/(TP+FN)).tolist()
