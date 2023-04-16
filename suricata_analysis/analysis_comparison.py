@@ -35,8 +35,8 @@ class AllDataHolder():
         self.frag_random.process_data()
 
     def make_comp_plots(self):
-        plot_comparison_packet_alerts(self.original.packets_sum, self.frag.packets_sum, self.original.sigs_sum, self.frag.sigs_sum, save='plots/packet_alerts_both.pdf')
-        plot_comparison_severity_distribution(self.original.sev_dist, self.frag.sev_dist, save='plots/severity_dist_both.pdf')
+        plot_comparison_packet_alerts(self.original.packets_sum, self.frag.packets_sum, self.frag_random.packets_sum, self.original.sigs_sum, self.frag.sigs_sum, self.frag_random.sigs_sum, save='plots/packet_alerts_both.pdf')
+        plot_comparison_severity_distribution(self.original.sev_dist, self.frag.sev_dist, self.frag_random.sev_dist, save='plots/severity_dist_both.pdf')
 
     def make_individual_plots(self):
         self.original.make_plots()

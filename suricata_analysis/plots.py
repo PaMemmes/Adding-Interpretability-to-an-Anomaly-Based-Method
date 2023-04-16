@@ -4,22 +4,24 @@ import matplotlib.pyplot as plt
 import itertools
 import os
 import glob
+import scienceplots
 
 import re
 from collections import defaultdict
 import seaborn
 import orjson
 
+plt.style.use('science')
 
 def make_xlabels(data, chars=None):
     x_ticks = [i for i in data.keys()]
     xlabels_new = [re.sub("(.{6})", "\\1\n", label, 0, re.DOTALL) for label in x_ticks]
     return xlabels_new
 
-def plot_comparison_severity_distribution(dist1, dist2, save=None):
+def plot_comparison_severity_distribution(dist1, dist2, dist3, save=None):
     # highest severity: 1, lowest severity: 4
     # Theoretically until 255 when creating rules manually
-    width = 0.33
+    width = np.min(np.diff(np.arange(2))) / 4
 
     severity_range = np.arange(4)
 
@@ -36,19 +38,21 @@ def plot_comparison_severity_distribution(dist1, dist2, save=None):
     ax.set_ylabel('Number of Alerts')
     ax.set_xticks(severity_range + width / 2)
     ax.set_xticklabels(('1', '2', '3', '4'))
-    rects1 = ax.bar(severity_range, dist1.values(), width=width, align='center')
-    rects2 = ax.bar(severity_range+width, dist2.values(), width=width, align='center')
+    rects1 = ax.bar(severity_range-width/2, dist1.values(), width=width, align='center')
+    rects2 = ax.bar(severity_range+width/2, dist2.values(), width=width, align='center')
+    rects3 = ax.bar(severity_range+width*1.5, dist3.values(), width=width, align='center')
     ax.bar_label(rects1)
     ax.bar_label(rects2)
-    ax.legend((rects1[0], rects2[0]), ('Normal', 'Fragmented'))
+    ax.bar_label(rects3)
+    ax.legend((rects1[0], rects2[0], rects3[0]), ('Normal', 'Fragmented', 'Fragmented Randomly'))
 
     if save is not None:
         fig.savefig(save)
     plt.close('all')
 
-def plot_comparison_packet_alerts(packets_sum, frag_packets_sum, sigs_sum, frag_sigs_sum, save=None):   
-    width = 0.33
-    
+def plot_comparison_packet_alerts(packets_sum, frag_packets_sum, rnd_frag_packets_sum, sigs_sum, frag_sigs_sum, rnd_frag_sigs_sum, save=None):   
+    width = np.min(np.diff(np.arange(2))) / 4
+
     fig, ax = plt.subplots()
     fig.set_size_inches(6,4)
     ax.set_axisbelow(True)
@@ -64,12 +68,14 @@ def plot_comparison_packet_alerts(packets_sum, frag_packets_sum, sigs_sum, frag_
     ax.set_xticks(np.arange(2) + width / 2)
     ax.set_xticklabels(('Total Alerts', 'Total Packets'))
 
-    bar = ax.bar(np.arange(2), [sigs_sum, packets_sum], width=width)
-    bar_fragmented = ax.bar(np.arange(2)+width, [frag_sigs_sum, frag_packets_sum], width=width)
+    bar = ax.bar(np.arange(2)-width/2, [sigs_sum, packets_sum], width=width)
+    bar_fragmented = ax.bar(np.arange(2)+width/2, [frag_sigs_sum, frag_packets_sum], width=width)
+    bar_rnd_fragmented = ax.bar(np.arange(2)+width*1.5, [rnd_frag_sigs_sum, rnd_frag_packets_sum], width=width)
 
-    ax.legend((bar[0], bar_fragmented[0]), ('Normal', 'Fragmented'))
+    ax.legend((bar[0], bar_fragmented[0], bar_rnd_fragmented[0]), ('Normal', 'Fragmented', 'Fragmented Randomly'))
     ax.bar_label(bar)
     ax.bar_label(bar_fragmented)
+    ax.bar_label(bar_rnd_fragmented)
     ax.set_yscale('log')
 
     if save is not None:
