@@ -22,8 +22,6 @@ CB91_Purple = '#9D2EC5'
 CB91_Violet = '#661D98'
 CB91_Amber = '#F5B14C'
 
-plt.style.use('science')
-
 class AllDataHolder():
     def __init__(self, original, frag, frag_random):
         self.original = DataHolder('original')
@@ -54,6 +52,7 @@ class DataHolder():
 
         self.sigs_dist = defaultdict(int)
         self.sev_dist = defaultdict(int)
+        self.category_dist = defaultdict(int)
 
         self.sigs_sum = 0
         self.packets_sum = 0
@@ -89,12 +88,16 @@ class DataHolder():
         for key in np.arange(len(self.sev_dist)):
             if key not in self.sev_dist.keys():
                 self.sev_dist[key] = 0
-    
+
+        for cat in self.categories:
+            for key, value in cat.items():
+                self.category_dist[key] += 1
+
         print(f'Total signatures {self.kind}: {self.sigs_sum}')
         print(f'Total packets of {self.kind}: {self.packets_sum}')
 
     def plot_file(self, file):
-        filepath = 'theZoo_original/' + file + '/eve.json'
+        filepath = 'theZoo_' + self.kind + '/' + file + '/eve.json'
         json_data = get_json_data(filepath)
         alerts, _ = get_alerts_and_packets(json_data)
         nmbr_signatures, _ = get_signatures(alerts)
@@ -105,15 +108,13 @@ class DataHolder():
         plot_alert_distribution(self.sigs_dist, save='plots/alert_dist_' + self.kind + '.pdf')
         plot_severity_distribution(self.severity, save='plots/severity_dist_' + self.kind + '.pdf')
         plot_packet_alerts(self.packets_sum, self.sigs_sum, save='plots/packet_alerts_' + self.kind + '.pdf')
-        plot_categories(self.categories, save='plots/cat_dist_' + self.kind + '.pdf')
+        plot_categories(self.category_dist, save='plots/cat_dist_' + self.kind + '.pdf')
         self.plot_file('All.ElectroRAT')
 
 if __name__ == '__main__':
-    category_original= '_original'
-    category_fragmented = '_fragmented'
-    # color_list = [CB91_Blue, CB91_Pink, CB91_Green, CB91_Amber,
-    #             CB91_Purple, CB91_Violet]
-    # plt.rcParams['axes.prop_cycle'] = plt.cycler(color=color_list)
+    #color_list = [CB91_Blue, CB91_Pink, CB91_Green, CB91_Amber,
+     #           CB91_Purple, CB91_Violet]
+    #plt.rcParams['axes.prop_cycle'] = plt.cycler(color=color_list)
 
     all_data = AllDataHolder(DataHolder('original'), DataHolder('fragmented'), DataHolder('fragmented_random'))
     all_data.make_comp_plots()

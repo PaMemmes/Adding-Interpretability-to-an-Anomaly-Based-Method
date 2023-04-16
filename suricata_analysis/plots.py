@@ -11,7 +11,7 @@ from collections import defaultdict
 import seaborn
 import orjson
 
-plt.style.use('science')
+plt.style.use(['ieee', 'science'])
 
 def make_xlabels(data, chars=None):
     x_ticks = [i for i in data.keys()]
@@ -146,12 +146,7 @@ def plot_alert_distribution(sigs_dist, save=None):
         fig.savefig(save, bbox_inches="tight")
     plt.close('all')
 
-def plot_categories(categories, save=None):
-    total_cats = defaultdict(int)
-    for cat in categories:
-        for key, value in cat.items():
-            total_cats[key] += 1
-
+def plot_categories(category_dist, save=None):
     fig, ax = plt.subplots()
     fig.set_size_inches(8,4)
     ax.set_axisbelow(True)
@@ -163,9 +158,9 @@ def plot_categories(categories, save=None):
     ax.set_title('ET Category Distribution')
     ax.set_xlabel('ET Category')
     ax.set_ylabel('Number of alerts')
-    xlabels_new = make_xlabels(total_cats)
-    ax.bar(np.arange(len(total_cats)), total_cats.values())
-    ax.set_xticks(range(0, len(total_cats.keys())), xlabels_new)
+    xlabels_new = make_xlabels(category_dist)
+    ax.bar(np.arange(len(category_dist)), category_dist.values())
+    ax.set_xticks(range(0, len(category_dist.keys())), xlabels_new)
 
     if save is not None:
         fig.savefig(save)
