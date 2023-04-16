@@ -6,7 +6,7 @@ from interpretable import interpret_tree
 import tensorflow as tf
 import collections
 BATCH_SIZE = 256
-NUM_GEN_DATA = 500
+NUM_GAN_DATA = 500
 
 
 if __name__ =='__main__':
@@ -24,14 +24,14 @@ if __name__ =='__main__':
     elif args.file =='combined':
         train_data = preprocess(kind='anomaly')
         model = train('wgan', args.trials, args.retraining, args.epochs, save='combined_wgan')
-        gen_data = []
-        for i in range(NUM_GEN_DATA):
+        gan_data = []
+        for i in range(NUM_GAN_DATA):
             noise = tf.random.normal(shape=(BATCH_SIZE, train_data.x.shape[1]))
             fake_x = model.generator(noise, training=False)
-            gen_data.append(fake_x)
-        print('Additional data: ', len(gen_data) * BATCH_SIZE)
-        preprocess(kind=None, add_data=gen_data)
-        model = xg_main(save='combined')
+            gan_data.append(fake_x)
+        print('Additional data: ', len(gan_data) * BATCH_SIZE)
+        preprocess(kind=None, gan_data=gan_data)
+        model = xg_main(args.trials, save='combined')
         interpret_tree(model, save=args.file)
     elif args.file == 'wgan' or args.file == 'gan':
         preprocess(kind='normal')
