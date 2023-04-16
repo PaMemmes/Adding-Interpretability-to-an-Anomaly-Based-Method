@@ -12,6 +12,7 @@ import seaborn
 import orjson
 
 from plots import plot_categories, plot_alert_distribution, plot_comparison_severity_distribution, plot_comparison_packet_alerts, plot_alerts
+from plots import plot_severity_distribution, plot_packet_alerts
 from utils import get_alerts_and_packets, get_json_data, get_signatures, get_categories
 
 CB91_Blue = '#2CBDFE'
@@ -23,70 +24,66 @@ CB91_Amber = '#F5B14C'
 
 plt.style.use('science')
 
+class AllDataHolder():
+    def __init__(self, original, frag, frag_random):
+        self.original = DataHolder('original')
+        self.frag = DataHolder('fragmented')
+        self.frag_random = DataHolder('fragmented_random')
+        self.original.preprocess_data()
+        self.frag.preprocess_data()
+        self.frag_random.preprocess_data()
+
+    def make_comp_plots(self):
+        plot_comparison_severity_distribution(self.original.total_severity, self.frag.total_severity, save='plots/severity_dist_both.pdf')
+        plot_comparison_packet_alerts(self.original.total_packets, self.frag.total_packets, self.original.total_signatures, self.frag.total_signatures, save='plots/packet_alerts_both.pdf')
+
+    def make_individual_plots(self):
+        self.original.make_plots()
+        self.frag.make_plots()
+        self.frag_random.make_plots()
+
+class DataHolder():
+    def __init__(self, kind):
+        self.kind = kind
+        self.total_packets = []
+        self.total_signatures = []
+        self.total_severity = []
+        self.total_categories = []
+    
+    def preprocess_data(self):
+        for filepath in sorted(glob.glob('theZoo_' + self.kind + '/**/*.json')):
+            json_file = get_json_data(filepath)
+            alerts, packets = get_alerts_and_packets(json_file)
+            nmbr_signatures, severity= get_signatures(alerts)
+            cats_frag = get_categories(alerts)
+
+            self.total_packets.append(packets)
+            self.total_signatures.append(nmbr_signatures)
+            self.total_severity.append(severity)
+            self.total_categories.append(cats_frag)
+
+    def plot_file(self, file):
+        file = 'theZoo_original/' + file + '/eve.json'
+        json_data = get_json_data(file)
+        alerts, _ = get_alerts_and_packets(json_data)
+        nmbr_signatures, _ = get_signatures(alerts)
+
+        plot_alerts(nmbr_signatures, file, save=f'plots/' + file + '_' + self.kind + '_original.pdf')
+
+    def make_plots(self):
+        plot_alert_distribution(self.total_signatures, save='plots/alert_dist_' + self.kind + '.pdf')
+        plot_severity_distribution(self.total_severity, save='plots/severity_dist_' + self.kind + '.pdf')
+        plot_packet_alerts(self.total_packets, self.total_signatures, save='plots/packet_alerts_' + self.kind + '.pdf')
+        plot_categories(self.total_categories, save='plots/cat_dist_' + self.kind + '.pdf')
+        self.plot_file('All.ElectroRAT')
+
 if __name__ == '__main__':
-    category_unfragmented = '_unfragmented'
+    category_original= '_original'
     category_fragmented = '_fragmented'
     # color_list = [CB91_Blue, CB91_Pink, CB91_Green, CB91_Amber,
     #             CB91_Purple, CB91_Violet]
     # plt.rcParams['axes.prop_cycle'] = plt.cycler(color=color_list)
 
-    total_packets_fragmented = []
-    total_signatures_fragmented = []
-    total_severity_fragmented = []
-    total_categories_fragmented = []
-
-    severity_dict_fragmented = defaultdict(int)
-    for filepath in sorted(glob.glob('theZoo' + category_fragmented + '/**/*.json')):
-        json_data_fragmented = get_json_data(filepath)
-        alerts_fragmented, packets_fragmented = get_alerts_and_packets(json_data_fragmented)
-        nmbr_signatures_fragmented, severity_fragmented = get_signatures(alerts_fragmented)
-        cats_frag = get_categories(alerts_fragmented)
-
-        for key, value in severity_fragmented.items():
-            severity_dict_fragmented[key] = value
-        total_packets_fragmented.append(packets_fragmented)
-        total_signatures_fragmented.append(nmbr_signatures_fragmented)
-        total_severity_fragmented.append(severity_fragmented)
-        total_categories_fragmented.append(cats_frag)
-
-    total_packets_unfragmented = []
-    total_signatures_unfragmented = []
-    total_severity_unfragmented = []
-    total_categories_unfragmented = []
-
-    severity_dict_unfragmented = defaultdict(int)
-    for filepath in sorted(glob.glob('theZoo' + category_unfragmented + '/**/*.json')):
-        json_data_unfragmented = get_json_data(filepath)
-        alerts_unfragmented, packets_unfragmented = get_alerts_and_packets(json_data_unfragmented)
-        nmbr_signatures_unfragmented, severity_unfragmented = get_signatures(alerts_unfragmented)
-        cats_unfrag = get_categories(alerts_unfragmented)
-
-        for key, value in severity_unfragmented.items():
-            severity_dict_unfragmented[key] = value
-        total_packets_unfragmented.append(packets_unfragmented)
-        total_signatures_unfragmented.append(nmbr_signatures_unfragmented)
-        total_severity_unfragmented.append(severity_unfragmented)
-        total_categories_unfragmented.append(cats_unfrag)
-    
-    plot_categories(total_categories_fragmented, save='plots/cat_dist_frag.pdf')
-    plot_categories(total_categories_unfragmented, save='plots/cat_dist_unfrag.pdf')
-
-    plot_comparison_severity_distribution(total_severity_unfragmented, total_severity_fragmented, save='plots/severity_dist_both.pdf')
-    plot_comparison_packet_alerts(total_packets_unfragmented, total_packets_fragmented, total_signatures_unfragmented, total_signatures_fragmented, save='plots/packet_alerts_both.pdf')
-    
-    plot_alert_distribution(total_signatures_fragmented, save='plots/alert_dist_' + 'fragmented.pdf')
-    plot_alert_distribution(total_signatures_unfragmented, save='plots/alert_dist_' + 'unfragmented.pdf')
-
-    file = 'theZoo_unfragmented/All.ElectroRAT/eve.json'
-    json_data = get_json_data(file)
-    alerts, packets = get_alerts_and_packets(json_data)
-    nmbr_signatures, severity = get_signatures(alerts)
-
-    plot_alerts(nmbr_signatures, file, save=f'plots/All.ElectroRAT_unfragmented.pdf')
-
-    file = 'theZoo_fragmented/All.ElectroRAT/eve.json'
-    json_data = get_json_data(file)
-    alerts, packets = get_alerts_and_packets(json_data)
-    nmbr_signatures, severity = get_signatures(alerts)
-
-    plot_alerts(nmbr_signatures, file, save=f'plots/All.ElectroRAT_fragmented.pdf')
+    all_data = AllDataHolder(DataHolder('original'), DataHolder('fragmented'), DataHolder('fragmented_random'))
+    all_data.make_comp_plots()
+    all_data.make_individual_plots()
