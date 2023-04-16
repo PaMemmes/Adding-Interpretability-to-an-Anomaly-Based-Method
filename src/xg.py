@@ -10,6 +10,7 @@ from copy import copy
 from time import time
 from sklearn.metrics import roc_auc_score,confusion_matrix,accuracy_score,classification_report,roc_curve
 import json
+from time import time
 
 from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, confusion_matrix, accuracy_score
 from utils.plots import  plot_roc, plot_precision_recall
@@ -21,10 +22,11 @@ from utils.utils import calc_metrics
 from utils.plots import plot_confusion_matrix
 import matplotlib.pyplot as plt
 import pickle
+import scipy.stats as stats
 
 FILENAME = '../data/preprocessed_data.pickle'
 
-def xg_main(save='xg', feature_weights=[0.9, 0.1]):
+def xg_main(trials, save='xg'):
     name = '../experiments/' + save + '/best/'
     Path(name).mkdir(parents=True, exist_ok=True)
     input_file = open(FILENAME, 'rb')
@@ -40,7 +42,6 @@ def xg_main(save='xg', feature_weights=[0.9, 0.1]):
     assert train.x.shape[0] == train.y.shape[0]
     assert test.x.shape[0] == test.y.shape[0]
     assert test.x.shape[1] == train.x.shape[1]
-
     params = {
         'num_rounds':        10,
         'max_depth':         8,
@@ -53,18 +54,24 @@ def xg_main(save='xg', feature_weights=[0.9, 0.1]):
         'reg_lambda':        1,
         'scale_pos_weight':  2,
         'objective':         'binary:logistic',
-        'verbose':           True
+        'verbose':           True,
+        'gpu_id':            0,
+        'tree_method':       'gpu_hist'
     }
     hyperparameter_grid = {
         'max_depth': [3, 6, 9],
         'learning_rate': [0.05, 0.1, 0.20],
-        'feature_weights': [[0, 1], [0, 1]]
+        'max_leaves': [2**4, 2**6, 2**8]
     }
-    dtrain = xgb.DMatrix(train.x, label=train.y, feature_weights=feature_weights)
-    dtest = xgb.DMatrix(test.x, label=test.y, feature_weights=feature_weights)
+    #dtrain = xgb.DMatrix(train.x, label=train.y, feature_weights=feature_weights)
+    #dtest = xgb.DMatrix(test.x, label=test.y, feature_weights=feature_weights)
     bst = xgb.XGBClassifier(**params)
-    clf = RandomizedSearchCV(bst, hyperparameter_grid, random_state=0)
+    clf = RandomizedSearchCV(bst, hyperparameter_grid, random_state=0, n_iter=10)
+    start = time()
     model = clf.fit(train.x, train.y)
+    print("GridSearchCV took %.2f seconds for %d candidate parameter settings." % (time() - start, len(clf.cv_results_["params"])) )  
+    print(clf.cv_results_)
+
     print(model.best_params_)
 
     threshold = .5
@@ -82,6 +89,7 @@ def xg_main(save='xg', feature_weights=[0.9, 0.1]):
     fpr, tpr, thresholds = roc_curve(test.y, preds)
     auc_val = auc(fpr, tpr)
     plot_confusion_matrix(cm, savefile=name + save + '_cm.pdf', name=save)
+    plot_confusion_matrix(cm_norm, savefile=name + save + '_cm_normalized.pdf', name=save)
     plot_roc(tpr, fpr, auc_val, name + save + '_roc.pdf', 'GAN')
     preds = np.vstack((1-preds, preds)).T
     plot_precision_recall(test.y, preds, name + save + '_precision_recall.pdf')
