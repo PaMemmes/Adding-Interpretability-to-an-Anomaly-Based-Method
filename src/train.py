@@ -81,12 +81,14 @@ def train(model_name, num_trials, num_retraining, epochs, save=False):
         
         auc_val = auc(fpr, tpr)
         cm = confusion_matrix(test.y, y_pred)
+        cm_norm = confusion_matrix(test.y, y_pred, normalize='all')
         mets = calc_metrics(cm)
         d = dict(mets)
         if save is not False:
-            plot_confusion_matrix(cm, name + '/confusion.png', save)
-            plot_roc(tpr, fpr, auc_val, name + '/roc.png', save)
-            plot_precision_recall(test.y, probas, name + '/precision_recall.png')
+            plot_confusion_matrix(cm, name + '/cm.pdf', save)
+            plot_confusion_matrix(cm_norm, name + '/cm_normalized.pdf', save)
+            plot_roc(tpr, fpr, auc_val, name + '/roc.pdf', save)
+            plot_precision_recall(test.y, probas, name + '/precision_recall.pdf')
         results = {
                 'Anomalies percentage': anomalies_percentage,
                 'Cutoff': per,
@@ -108,9 +110,10 @@ def train(model_name, num_trials, num_retraining, epochs, save=False):
     
     best_res = sorted(saves, key=lambda d: d['Accuracy'])[-1]
     print('Best result: ', best_res)
-    shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/confusion.png', '../experiments/' + save + '/best/confusion.png')
-    shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/roc.png', '../experiments/' + save + '/best/roc.png')
-    shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/precision_recall.png', '../experiments/' + save + '/best/precision_recall.png')
+    shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/cm.pdf', '../experiments/' + save + '/best/cm.pdf')
+    shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/cm_normalized.pdf', '../experiments/' + save + '/best/cm_normalized.pdf')
+    shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/roc.pdf', '../experiments/' + save + '/best/roc.pdf')
+    shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/precision_recall.pdf', '../experiments/' + save + '/best/precision_recall.pdf')
    
     if save is not False:
         with open('../experiments/' + save + '/best/best_model_wgan.json', 'w', encoding='utf-8') as f: 
