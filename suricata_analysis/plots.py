@@ -62,7 +62,7 @@ def plot_comparison_severity_distribution(dist1, dist2, save=None):
 
     if save is not None:
         fig.savefig(save)
-
+    plt.close('all')
 def plot_comparison_packet_alerts(packets, packets_fragmented, total_signatures, total_signatures_fragmented, save=None):   
     width = 0.33
 
@@ -109,7 +109,7 @@ def plot_comparison_packet_alerts(packets, packets_fragmented, total_signatures,
 
     if save is not None:
         fig.savefig(save)
-
+    plt.close('all')
 def plot_packet_alerts(packets, total_signatures, save=None):    
     total_sigs = 0
     for elem in total_signatures:
@@ -138,6 +138,7 @@ def plot_packet_alerts(packets, total_signatures, save=None):
     
     if save is not None:
         fig.savefig(save)
+    plt.close('all')
 
 def plot_alerts(nmbr_signatures, file, save=None):    
     xlabels_new = make_xlabels(nmbr_signatures)
@@ -160,7 +161,7 @@ def plot_alerts(nmbr_signatures, file, save=None):
     
     if save is not None:
         fig.savefig(save, bbox_inches="tight")
-
+    plt.close('all')
 
 def plot_alert_distribution(dist, save=None):
     total_sigs = defaultdict(int)
@@ -185,7 +186,8 @@ def plot_alert_distribution(dist, save=None):
     
     if save is not None:
         fig.savefig(save, bbox_inches="tight")
-    
+    plt.close('all')
+
 def plot_categories(categories, save=None):
     total_cats = defaultdict(int)
     for cat in categories:
@@ -206,11 +208,10 @@ def plot_categories(categories, save=None):
     xlabels_new = make_xlabels(total_cats)
     ax.bar(np.arange(len(total_cats)), total_cats.values())
     ax.set_xticks(range(0, len(total_cats.keys())), xlabels_new)
-    #ax.set_xticklabels(total_cats.keys())
-    plt.show()
 
     if save is not None:
         fig.savefig(save)
+    plt.close('all')
 
 def plot_severity_distribution(dist, save=None):
     # highest severity: 1, lowest severity: 4
@@ -240,3 +241,4 @@ def plot_severity_distribution(dist, save=None):
     if save is not None:
         fig.savefig(save)
 
+    plt.close('all')
