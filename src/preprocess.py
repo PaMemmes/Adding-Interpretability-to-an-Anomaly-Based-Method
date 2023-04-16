@@ -11,13 +11,13 @@ from utils.utils import remove_infs, make_labels_binary, subset
 
 BATCH_SIZE = 256
 
-def preprocess(kind='normal', add_data=None):
+def preprocess(kind='normal', gan_data=None):
     df = pd.read_csv('../data/cicids2017_kaggle/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv')
     df = df.rename(columns={' Label': 'label'})
     df_cols = list(df)
-
-    if add_data is not None:
-        x = np.array(add_data)
+    print(df.head())
+    if gan_data is not None:
+        x = np.array(gan_data)
         x = np.array(x).reshape((x.shape[0]*x.shape[1]), x.shape[2])
         y = np.array(['ANOMALY' for i in range(len(x))]).reshape(len(x), 1)
         data = np.concatenate((x,y), axis=1)
@@ -58,7 +58,7 @@ def preprocess(kind='normal', add_data=None):
     x_train = scaler.fit_transform(x_train)
     x_test = scaler.transform(x_test)
 
-    if add_data is not None:
+    if gan_data is not None:
         x_train_add = x_train_add.to_numpy()
         x_train = np.vstack((x_train, x_train_add))
         y_train = np.concatenate((y_train, y_train_add))
@@ -79,3 +79,8 @@ def preprocess(kind='normal', add_data=None):
         pickle.dump(preprocessed_data, file)
     
     return train_sqc
+
+if __name__ == '__main__':
+    pd.set_option('display.max_columns', 500)
+
+    preprocess()
