@@ -22,5 +22,4 @@ def get_categories(alerts):
     category = defaultdict(int)
     for entry in alerts:
         category[entry['alert']['category']] += 1
-    #print(category)
     return category

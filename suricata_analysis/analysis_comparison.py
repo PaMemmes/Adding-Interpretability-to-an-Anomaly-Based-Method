@@ -85,11 +85,14 @@ class DataHolder():
             for key, value in signatures.items():
                 self.sev_dist[value] += 1
         
-        # Make value 0 for every key that is not there
+        # Set value "0" for every key that is existent
         for key in np.arange(len(self.sev_dist)):
             if key not in self.sev_dist.keys():
                 self.sev_dist[key] = 0
     
+        print(f'Total signatures {self.kind}: {self.sigs_sum}')
+        print(f'Total packets of {self.kind}: {self.packets_sum}')
+
     def plot_file(self, file):
         filepath = 'theZoo_original/' + file + '/eve.json'
         json_data = get_json_data(filepath)

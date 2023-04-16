@@ -77,8 +77,6 @@ def plot_comparison_packet_alerts(packets_sum, frag_packets_sum, sigs_sum, frag_
     plt.close('all')
 
 def plot_packet_alerts(packets_sum, sigs_sum, save=None):    
-    print('Total signatures:', sigs_sum)
-    print('Total packets:', packets_sum)
     fig, ax = plt.subplots()
     fig.set_size_inches(6,4)
     ax.set_axisbelow(True)
