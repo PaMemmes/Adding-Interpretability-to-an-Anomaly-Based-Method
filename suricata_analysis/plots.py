@@ -200,7 +200,6 @@ def plot_severity_distribution(dist, save=None):
     # highest severity: 1, lowest severity: 4
     # Theoretically until 255 when creating rules manually
     severity_range = [1,2,3,4]
-
     fig, ax = plt.subplots()
     fig.set_size_inches(8,4)
     ax.set_axisbelow(True)
@@ -210,9 +209,11 @@ def plot_severity_distribution(dist, save=None):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.set_title('Severity Distribution')
+    ax.set_xticks(severity_range)
+    ax.set_xticklabels(('1', '2', '3', '4'))
     ax.set_xlabel('Severity Level (1: Highest, 4: Lowest)')
     ax.set_ylabel('Number of alerts')
-    ax.bar(severity_range, dist)
+    ax.bar(severity_range, dist.values())
     
     if save is not None:
         fig.savefig(save)

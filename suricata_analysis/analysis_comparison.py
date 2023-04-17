@@ -68,12 +68,9 @@ class DataHolder():
             self.severity.append(severity)
             self.categories.append(cats)
 
-        for elem in self.signatures:
-            for value in elem.values():
-                self.sigs_sum += value
 
-        for elem in self.packets:
-            self.packets_sum += elem
+        self.sigs_sum = sum([sum(elem.values()) for elem in self.signatures])
+        self.packets_sum = sum(self.packets)
         
         for signatures in self.signatures:
             for key, value in signatures.items():
