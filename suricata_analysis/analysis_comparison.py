@@ -8,12 +8,11 @@ import glob
 
 import re
 from collections import defaultdict
-import seaborn
 import orjson
 
 from plots import plot_categories, plot_alert_distribution, plot_comparison_severity_distribution, plot_comparison_packet_alerts, plot_alerts
-from plots import plot_severity_distribution, plot_packet_alerts
-from utils import get_alerts_and_packets, get_json_data, get_signatures, get_categories
+from plots import plot_severity_distribution, plot_packet_alerts, plot_comparison_categories
+from utils import get_alerts_and_packets, get_json_data, get_signatures
 
 CB91_Blue = '#2CBDFE'
 CB91_Green = '#47DBCD'
@@ -34,8 +33,9 @@ class AllDataHolder():
 
     def make_comp_plots(self):
         plot_comparison_packet_alerts(self.original.packets_sum, self.frag.packets_sum, self.frag_random.packets_sum, self.original.sigs_sum, self.frag.sigs_sum, self.frag_random.sigs_sum, save='plots/packet_alerts_both.pdf')
-        plot_comparison_severity_distribution(self.original.sev_dist, self.frag.sev_dist, self.frag_random.sev_dist, save='plots/severity_dist_both.pdf')
-
+        plot_comparison_severity_distribution(self.original.sev_dist, self.frag.sev_dist, self.frag_random.sev_dist, save='plots/severity_dist_comp.pdf')
+        plot_comparison_categories(self.original.category_dist, self.frag.category_dist, self.frag_random.category_dist, save='plots/category_dist_comp.pdf')
+    
     def make_individual_plots(self):
         self.original.make_plots()
         self.frag.make_plots()
@@ -60,14 +60,13 @@ class DataHolder():
     def process_data(self):
         for filepath in sorted(glob.glob('theZoo_' + self.kind + '/**/*.json')):
             json_file = get_json_data(filepath)
+            # print(json_file)
             alerts, packets = get_alerts_and_packets(json_file)
-            nmbr_signatures, severity= get_signatures(alerts)
-            cats_frag = get_categories(alerts)
-
+            nmbr_signatures, severity, cats= get_signatures(alerts)
             self.packets.append(packets)
             self.signatures.append(nmbr_signatures)
             self.severity.append(severity)
-            self.categories.append(cats_frag)
+            self.categories.append(cats)
 
         for elem in self.signatures:
             for value in elem.values():
@@ -82,7 +81,7 @@ class DataHolder():
         
         for signatures in self.severity:
             for key, value in signatures.items():
-                self.sev_dist[value] += 1
+                self.sev_dist[key] += value
         
         # Set value "0" for every key that is existent
         for key in np.arange(len(self.sev_dist)):
@@ -91,22 +90,25 @@ class DataHolder():
 
         for cat in self.categories:
             for key, value in cat.items():
-                self.category_dist[key] += 1
-
-        print(f'Total signatures {self.kind}: {self.sigs_sum}')
+                self.category_dist[key] += value
+        
         print(f'Total packets of {self.kind}: {self.packets_sum}')
+        print(f'Total signatures {self.kind}: {self.sigs_sum}')
+        print(f'Total categories {self.kind}: {sum(self.category_dist.values())}')
+        print(f'Total sev dist {self.kind}: {sum(self.sev_dist.values())}')
+        print(f'Total sigs_dist {self.kind}: {sum(self.sigs_dist.values())}\n')
 
     def plot_file(self, file):
         filepath = 'theZoo_' + self.kind + '/' + file + '/eve.json'
         json_data = get_json_data(filepath)
         alerts, _ = get_alerts_and_packets(json_data)
-        nmbr_signatures, _ = get_signatures(alerts)
+        nmbr_signatures, _, _ = get_signatures(alerts)
 
         plot_alerts(nmbr_signatures, file, save=f'plots/' + file + '_' + self.kind + '.pdf')
 
     def make_plots(self):
         plot_alert_distribution(self.sigs_dist, save='plots/alert_dist_' + self.kind + '.pdf')
-        plot_severity_distribution(self.severity, save='plots/severity_dist_' + self.kind + '.pdf')
+        plot_severity_distribution(self.sev_dist, save='plots/severity_dist_' + self.kind + '.pdf')
         plot_packet_alerts(self.packets_sum, self.sigs_sum, save='plots/packet_alerts_' + self.kind + '.pdf')
         plot_categories(self.category_dist, save='plots/cat_dist_' + self.kind + '.pdf')
         self.plot_file('All.ElectroRAT')

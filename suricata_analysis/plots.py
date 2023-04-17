@@ -8,7 +8,6 @@ import scienceplots
 
 import re
 from collections import defaultdict
-import seaborn
 import orjson
 
 plt.style.use(['ieee', 'science'])
@@ -77,6 +76,37 @@ def plot_comparison_packet_alerts(packets_sum, frag_packets_sum, rnd_frag_packet
     ax.bar_label(bar_fragmented)
     ax.bar_label(bar_rnd_fragmented)
     ax.set_yscale('log')
+
+    if save is not None:
+        fig.savefig(save)
+    plt.close('all')
+
+def plot_comparison_categories(categories, frag_categories, frag_rnd_categories, save=None):   
+    width = np.min(np.diff(np.arange(2))) / 4
+
+    severity_range = np.arange(6)
+
+    new_labels = make_xlabels(categories)
+    fig, ax = plt.subplots()
+    fig.set_size_inches(6,4)
+    ax.set_axisbelow(True)
+    ax.yaxis.grid(color='white', linestyle='solid')
+    ax.xaxis.grid(color='white', linestyle='solid')
+    ax.set_facecolor("lightgrey")
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.set_title('Category Distribution')
+    ax.set_xlabel('Category')
+    ax.set_ylabel('Number of Alerts')
+    ax.set_xticks(severity_range + width / 2)
+    ax.set_xticklabels(new_labels)
+    rects1 = ax.bar(severity_range-width/2, categories.values(), width=width, align='center')
+    rects2 = ax.bar(severity_range+width/2, frag_categories.values(), width=width, align='center')
+    rects3 = ax.bar(severity_range+width*1.5, frag_rnd_categories.values(), width=width, align='center')
+    ax.bar_label(rects1)
+    ax.bar_label(rects2)
+    ax.bar_label(rects3)
+    ax.legend((rects1[0], rects2[0], rects3[0]), ('Normal', 'Fragmented', 'Fragmented Randomly'))
 
     if save is not None:
         fig.savefig(save)
@@ -170,14 +200,7 @@ def plot_severity_distribution(dist, save=None):
     # highest severity: 1, lowest severity: 4
     # Theoretically until 255 when creating rules manually
     severity_range = [1,2,3,4]
-    total_sigs = defaultdict(int)
-    for signatures in dist:
-        for key, value in signatures.items():
-            total_sigs[value] += 1
 
-    for key in severity_range:
-        if key not in total_sigs.keys():
-            total_sigs[key] = 0
     fig, ax = plt.subplots()
     fig.set_size_inches(8,4)
     ax.set_axisbelow(True)
@@ -189,7 +212,7 @@ def plot_severity_distribution(dist, save=None):
     ax.set_title('Severity Distribution')
     ax.set_xlabel('Severity Level (1: Highest, 4: Lowest)')
     ax.set_ylabel('Number of alerts')
-    ax.bar(severity_range, total_sigs.values())
+    ax.bar(severity_range, dist)
     
     if save is not None:
         fig.savefig(save)
