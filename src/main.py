@@ -23,10 +23,13 @@ if __name__ =='__main__':
     if args.file == 'xg':
         if args.frag_data == 'Y':
             train_sqc, test_sqc, df_cols = preprocess(kind=None, additional=None, frag_data=True)
+            _, frags, _= get_frags()
+            xg_main(train=train_sqc, test=test_sqc, frags=frags, trials=args.trials, save='train_w_frags_xg')
         else:
             train_sqc, test_sqc, df_cols = preprocess(kind=None, additional=None, frag_data=False)
-        _, frags, _= get_frags()
-        xg_main(train=train_sqc, test=test_sqc, frags=frags, trials=args.trials, save='xg')
+            _, frags, _= get_frags()
+            xg_main(train=train_sqc, test=test_sqc, frags=frags, trials=args.trials, save='train_wo_frags_xg')
+        
     elif args.file =='combined':
         train_sqc, test_sqc, df_cols = preprocess(kind='anomaly')
         model = train('wgan', train_sqc, test_sqc, None, args.trials, args.retraining, args.epochs, save='combined_wgan')
@@ -38,17 +41,25 @@ if __name__ =='__main__':
 
         if args.frag_data =='Y':
             train_sqc, test_sqc, df_cols = preprocess(kind=None, additional=gan_data, frag_data=True)
+            _, frags, _= get_frags()
+            model = xg_main(train=train_sqc, test=test_sqc, frags=frags, trials=args.trials, save='train_w_frags_combined')
         else:
             train_sqc, test_sqc, df_cols = preprocess(kind=None, additional=gan_data, frag_data=False)
-        _, frags, _= get_frags()
-        
-        model = xg_main(train=train_sqc, test=test_sqc, frags=frags, trials=args.trials, save='combined')
+            _, frags, _= get_frags()
+            model = xg_main(train=train_sqc, test=test_sqc, frags=frags, trials=args.trials, save='train_wo_frags_combined')
 
+        
+        
+        
         interpret_tree(model, train_sqc, test_sqc, df_cols, save=args.file)
     elif args.file == 'wgan' or args.file == 'gan':
         if args.frag_data =='Y':
             train_sqc, test_sqc, df_cols = preprocess(kind='normal', additional=None, frag_data=True)
+            _, frags, _= get_frags()
+            train(args.file, train_sqc, test_sqc, frags, args.trials, args.retraining, args.epochs, save='train_w_frags_' + args.file)
+
         else:
             train_sqc, test_sqc, df_cols = preprocess(kind='normal', additional=None, frag_data=False)
-        _, frags, _= get_frags()
-        train(args.file, train_sqc, test_sqc, frags, args.trials, args.retraining, args.epochs, save=args.file)
+            _, frags, _= get_frags()
+            train(args.file, train_sqc, test_sqc, frags, args.trials, args.retraining, args.epochs, save='train_wo_frags_' + args.file)
+
