@@ -162,6 +162,6 @@ class HyperGAN(keras_tuner.HyperModel):
         model.fit(x, y, batch_size=data.batch_size, **kwargs)
         
         preds = model.discriminator.predict(x)
-        avg = self.mean_kl_score(y, preds)
-        return -avg
-        # return (model.dis_loss_tracker.result().numpy() + model.gen_loss_tracker.result().numpy()) / 2
+        #avg = self.mean_kl_score(y, preds)
+        #return -avg
+        return (model.dis_loss_tracker.result().numpy() + model.gen_loss_tracker.result().numpy()) / 2
