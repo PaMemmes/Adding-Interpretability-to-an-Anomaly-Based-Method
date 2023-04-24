@@ -39,7 +39,7 @@ def get_preds(results, test):
     y_pred[inds_comp] = 1
     return y_pred, probas, per, anomalies_percentage
 
-def train(model_name, num_trials, num_retraining, epochs, save=False):
+def train(model_name, train, test, num_trials, num_retraining, epochs, save=False):
     experiment = '../experiments/' + save + '/all/experiment'
     Path('../experiments/' + save + '/best/').mkdir(parents=True, exist_ok=True)
     input_file = open(FILENAME, 'rb')
@@ -48,9 +48,6 @@ def train(model_name, num_trials, num_retraining, epochs, save=False):
 
     config = open_config(model_name)
 
-    dataset = preprocessed_data['dataset']
-    train = dataset['train']
-    test = dataset['test']
     best_hp = hyperopt(model_name, config, train, test, num_trials)
 
     num_features = train.x.shape[1]
