@@ -21,10 +21,10 @@ def open_config(model_name):
         config = json.loads(f.read())
     return config
 
-def get_preds(results, test):
+def get_preds(results, train):
 
-    normals = collections.Counter(test.y)[0]
-    anomalies = collections.Counter(test.y)[1]
+    normals = collections.Counter(train.y)[0]
+    anomalies = collections.Counter(train.y)[1]
     anomalies_percentage = anomalies / (normals + anomalies)
     
     # Obtaining the lowest "anomalies_percentage" score
@@ -39,7 +39,7 @@ def get_preds(results, test):
     y_pred[inds_comp] = 1
     return y_pred, probas, per, anomalies_percentage
 
-def train(model_name, train, test, num_trials, num_retraining, epochs, save=False):
+def train(model_name, train, test, frags=None, num_trials=50, num_retraining=50, epochs=50, save=False):
     experiment = '../experiments/' + save + '/all/experiment'
     Path('../experiments/' + save + '/best/').mkdir(parents=True, exist_ok=True)
     input_file = open(FILENAME, 'rb')
@@ -70,7 +70,7 @@ def train(model_name, train, test, num_trials, num_retraining, epochs, save=Fals
 
         results_df, results = test_model(hypermodel, test)
         models.append(hypermodel)
-        y_pred, probas, per, anomalies_percentage = get_preds(results, test)
+        y_pred, probas, per, anomalies_percentage = get_preds(results, train)
 
         precision, recall, f1, _ = precision_recall_fscore_support(test.y, y_pred, average='binary')
         accuracy = accuracy_score(test.y, y_pred)
@@ -112,6 +112,16 @@ def train(model_name, train, test, num_trials, num_retraining, epochs, save=Fals
     shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/roc.pdf', '../experiments/' + save + '/best/roc.pdf')
     shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/precision_recall.pdf', '../experiments/' + save + '/best/precision_recall.pdf')
    
+    if frags is not None:
+        results_df, results = test_model(model, frags)
+        y_pred, probas, per, anomalies_percentage = get_preds(results, test)
+        cm = confusion_matrix(frags.y, y_pred)
+        cm_norm = confusion_matrix(frags.y, y_pred, normalize='all')
+        mets = calc_metrics(cm)
+        d = dict(mets)
+        print('anomalies perc', anomalies_percentage)
+        print('Frags metrics: ', d)
+
     if save is not False:
         with open('../experiments/' + save + '/best/best_model_wgan.json', 'w', encoding='utf-8') as f: 
             json.dump(best_res, f, ensure_ascii=False, indent=4)
