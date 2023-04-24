@@ -29,7 +29,7 @@ if __name__ =='__main__':
         xg_main(train=train_sqc, test=test_sqc, frags=frags, trials=args.trials, save='xg')
     elif args.file =='combined':
         train_sqc, test_sqc, df_cols = preprocess(kind='anomaly')
-        model = train('wgan', train_sqc, test_sqc, frags, args.trials, args.retraining, args.epochs, save='combined_wgan')
+        model = train('wgan', train_sqc, test_sqc, None, args.trials, args.retraining, args.epochs, save='combined_wgan')
         gan_data = []
         for i in range(floor(len(train_sqc.x) / BATCH_SIZE / 10)):
             noise = tf.random.normal(shape=(BATCH_SIZE, train_sqc.x.shape[1]))
