@@ -26,19 +26,26 @@ import scipy.stats as stats
 
 FILENAME = '../data/preprocessed_data.pickle'
 
-def calc_frags(model, frags):
+def calc_all(model, test):
     threshold = .5
-    true_labels = frags.y.astype(int)
+    true_labels = test.y.astype(int)
 
-    preds = model.predict(frags.x)
+    preds = model.predict(test.x)
     pred_labels = (preds > threshold).astype(int)
     accuracy = accuracy_score(true_labels, pred_labels)
     cm = confusion_matrix(true_labels, pred_labels)
-    print(cm)
+    cm_norm = confusion_matrix(true_labels, pred_labels, normalize='all')
+    precision, recall, f1, _ = precision_recall_fscore_support(test.y, pred_labels, average='binary')
+    accuracy = accuracy_score(test.y, pred_labels)
+    fpr, tpr, thresholds = roc_curve(test.y, preds)
+    auc_val = auc(fpr, tpr)
+
     metrics = calc_metrics(cm)
-    
+    metrics['f1'] = f1
+    metrics['AUC'] = auc_val
     d = dict(metrics)
-    print('Frags', d)
+
+    return d, cm, cm_norm, preds
 
 def xg_main(train, test, frags, trials, save='xg'):
     name = '../experiments/' + save + '/best/'
@@ -81,42 +88,43 @@ def xg_main(train, test, frags, trials, save='xg'):
 
     print(model.best_params_)
 
-    threshold = .5
-    true_labels = test.y.astype(int)
-    true_labels.sum()
-    preds = model.predict(test.x)
-    pred_labels = (preds > threshold).astype(int)
-    auc_x = roc_auc_score(true_labels, preds)
-    accuracy = accuracy_score(true_labels, pred_labels)
-    cm = confusion_matrix(true_labels, pred_labels)
-    cm_norm = confusion_matrix(true_labels, pred_labels, normalize='all')
+    # threshold = .5
+    # true_labels = test.y.astype(int)
+    # preds = model.predict(test.x)
+    # pred_labels = (preds > threshold).astype(int)
+    # auc_x = roc_auc_score(true_labels, preds)
+    # accuracy = accuracy_score(true_labels, pred_labels)
+    # cm = confusion_matrix(true_labels, pred_labels)
+    # cm_norm = confusion_matrix(true_labels, pred_labels, normalize='all')
 
-    precision, recall, f1, _ = precision_recall_fscore_support(test.y, pred_labels, average='binary')
-    accuracy = accuracy_score(test.y, pred_labels)
-    fpr, tpr, thresholds = roc_curve(test.y, preds)
-    auc_val = auc(fpr, tpr)
-    plot_confusion_matrix(cm, savefile=name + save + '_cm.pdf', name=save)
-    plot_confusion_matrix(cm_norm, savefile=name + save + '_cm_normalized.pdf', name=save)
-    plot_roc(tpr, fpr, auc_val, name + save + '_roc.pdf', 'GAN')
-    preds = np.vstack((1-preds, preds)).T
-    plot_precision_recall(test.y, preds, name + save + '_precision_recall.pdf')
-    results = {
-            'Accuracy': accuracy,
-            'Precision': precision,
-            'Recall': recall,
-            'F1': f1,
-            'AUC': auc_x
-    }
-    metrics = calc_metrics(cm)
-    
-    d = dict(metrics)
-    print('Real data', d)
+    # precision, recall, f1, _ = precision_recall_fscore_support(test.y, pred_labels, average='binary')
+    # accuracy = accuracy_score(test.y, pred_labels)
+    # fpr, tpr, thresholds = roc_curve(test.y, preds)
+    # auc_val = auc(fpr, tpr)
     
     if frags is not None:
-        calc_frags(model, frags)
+        metrics_frag, cm_frag, cm_frag_norm, preds_frag = calc_all(model, frags)
+
+    # precision, recall, f1, _ = precision_recall_fscore_support(test.y, pred_labels, average='binary')
+    # accuracy = accuracy_score(test.y, pred_labels)
+    # fpr, tpr, thresholds = roc_curve(test.y, preds)
+    # auc_val = auc(fpr, tpr)
+    
+    metrics, cm, cm_norm, preds = calc_all(model, test)
+    plot_confusion_matrix(cm, savefile=name + save + '_cm.pdf', name=save)
+    plot_confusion_matrix(cm_norm, savefile=name + save + '_cm_normalized.pdf', name=save)
+    plot_roc(metrics['TPR'], metrics['FPR'], metrics['AUC'], name + save + '_roc.pdf', name=save)
+    preds = np.vstack((1-preds, preds)).T
+    plot_precision_recall(test.y, preds, name + save + '_precision_recall.pdf')
+    
+    
+    results = {
+            'Metrics': metrics,
+            'Metrics frag': metrics_frag
+    }
+    print('End results', results)
     with open('../experiments/' + save + '/best/' + save + '_best_model.json', 'w', encoding='utf-8') as f: 
         json.dump(results, f, ensure_ascii=False, indent=4)
-        json.dump(d, f, ensure_ascii=False, indent=4)
 
     model.best_estimator_.save_model('models/' + save + '.model')
     return model.best_estimator_
