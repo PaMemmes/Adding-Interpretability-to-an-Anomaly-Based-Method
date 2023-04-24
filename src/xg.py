@@ -87,28 +87,9 @@ def xg_main(train, test, frags, trials, save='xg'):
     print(clf.cv_results_)
 
     print(model.best_params_)
-
-    # threshold = .5
-    # true_labels = test.y.astype(int)
-    # preds = model.predict(test.x)
-    # pred_labels = (preds > threshold).astype(int)
-    # auc_x = roc_auc_score(true_labels, preds)
-    # accuracy = accuracy_score(true_labels, pred_labels)
-    # cm = confusion_matrix(true_labels, pred_labels)
-    # cm_norm = confusion_matrix(true_labels, pred_labels, normalize='all')
-
-    # precision, recall, f1, _ = precision_recall_fscore_support(test.y, pred_labels, average='binary')
-    # accuracy = accuracy_score(test.y, pred_labels)
-    # fpr, tpr, thresholds = roc_curve(test.y, preds)
-    # auc_val = auc(fpr, tpr)
     
     if frags is not None:
         metrics_frag, cm_frag, cm_frag_norm, preds_frag = calc_all(model, frags)
-
-    # precision, recall, f1, _ = precision_recall_fscore_support(test.y, pred_labels, average='binary')
-    # accuracy = accuracy_score(test.y, pred_labels)
-    # fpr, tpr, thresholds = roc_curve(test.y, preds)
-    # auc_val = auc(fpr, tpr)
     
     metrics, cm, cm_norm, preds = calc_all(model, test)
     plot_confusion_matrix(cm, savefile=name + save + '_cm.pdf', name=save)
