@@ -4,6 +4,7 @@ import math
 import pandas as pd
 import numpy as np
 from collections import defaultdict
+from sklearn.preprocessing import MinMaxScaler
 
 import tensorflow as tf
 # Labels normal data as 0, anomalies as 1
@@ -51,6 +52,19 @@ def remove_infs(df):
     indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)
     return df[indices_to_keep], labels[indices_to_keep]
 
+def encode(le, labels):
+    labels = le.transform(labels)
+
+    return labels
+
+def scale(x_train, x_test):
+    scaler = MinMaxScaler()
+
+    x_train = scaler.fit_transform(x_train)
+    x_test = scaler.transform(x_test)
+
+    return x_train, x_test
+
 def test_model(model, test):
     nr_batches_test = np.ceil(test.x.shape[0] // test.batch_size).astype(np.int32)
     results = []
@@ -76,6 +90,11 @@ def calc_metrics(confusion_matrix):
     FN = FN[1]
     TP = TP[1]
     TN = TN[1]
+
+    print('TP', TP)
+    print('TN', TN)
+    print('FP', FP)
+    print('FN', FN)
 
     # Sensitivity, hit rate, recall, or true positive rate
     met['TPR'] = (TP/(TP+FN)).tolist()
