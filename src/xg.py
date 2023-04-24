@@ -26,22 +26,28 @@ import scipy.stats as stats
 
 FILENAME = '../data/preprocessed_data.pickle'
 
-def xg_main(trials, save='xg'):
+def calc_frags(model, frags):
+    threshold = .5
+    true_labels = frags.y.astype(int)
+
+    preds = model.predict(frags.x)
+    pred_labels = (preds > threshold).astype(int)
+    accuracy = accuracy_score(true_labels, pred_labels)
+    cm = confusion_matrix(true_labels, pred_labels)
+    print(cm)
+    metrics = calc_metrics(cm)
+    
+    d = dict(metrics)
+    print('Frags', d)
+
+def xg_main(train, test, frags, trials, save='xg'):
     name = '../experiments/' + save + '/best/'
     Path(name).mkdir(parents=True, exist_ok=True)
-    input_file = open(FILENAME, 'rb')
-    preprocessed_data = pickle.load(input_file)
-    input_file.close()
-
-    train_dataset = preprocessed_data['dataset']
-
-    num_features = train_dataset['train'].x.shape[1]
-    train = train_dataset['train']
-    test = train_dataset['test']
-    
     assert train.x.shape[0] == train.y.shape[0]
     assert test.x.shape[0] == test.y.shape[0]
     assert test.x.shape[1] == train.x.shape[1]
+    train.y = train.y.astype(int)
+    
     params = {
         'num_rounds':        10,
         'max_depth':         8,
@@ -66,7 +72,8 @@ def xg_main(trials, save='xg'):
     #dtrain = xgb.DMatrix(train.x, label=train.y, feature_weights=feature_weights)
     #dtest = xgb.DMatrix(test.x, label=test.y, feature_weights=feature_weights)
     bst = xgb.XGBClassifier(**params)
-    clf = RandomizedSearchCV(bst, hyperparameter_grid, random_state=0, n_iter=10)
+    clf = RandomizedSearchCV(bst, hyperparameter_grid, random_state=0, n_iter=trials)
+    
     start = time()
     model = clf.fit(train.x, train.y)
     print("GridSearchCV took %.2f seconds for %d candidate parameter settings." % (time() - start, len(clf.cv_results_["params"])) )  
@@ -100,11 +107,13 @@ def xg_main(trials, save='xg'):
             'F1': f1,
             'AUC': auc_x
     }
-    print(results)
     metrics = calc_metrics(cm)
     
     d = dict(metrics)
-    print(d)
+    print('Real data', d)
+    
+    if frags is not None:
+        calc_frags(model, frags)
     with open('../experiments/' + save + '/best/' + save + '_best_model.json', 'w', encoding='utf-8') as f: 
         json.dump(results, f, ensure_ascii=False, indent=4)
         json.dump(d, f, ensure_ascii=False, indent=4)
