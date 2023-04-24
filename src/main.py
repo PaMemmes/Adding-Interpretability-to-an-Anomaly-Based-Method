@@ -21,8 +21,12 @@ if __name__ =='__main__':
     args = parser.parse_args()
 
     if args.file == 'xg':
-        train_sqc, test_sqc, df_cols = preprocess(kind=None, additional=False, frag_data=False)
-        xg_main(train=train_sqc, test=test_sqc, frags=None, trials=args.trials, save='xg')
+        if args.frag_data == 'Y':
+            train_sqc, test_sqc, df_cols = preprocess(kind=None, additional=None, frag_data=True)
+        else:
+            train_sqc, test_sqc, df_cols = preprocess(kind=None, additional=None, frag_data=False)
+        _, frags, _= get_frags()
+        xg_main(train=train_sqc, test=test_sqc, frags=frags, trials=args.trials, save='xg')
     elif args.file =='combined':
         train_sqc, test_sqc, df_cols = preprocess(kind='anomaly')
         model = train('wgan', train_sqc, test_sqc, args.trials, args.retraining, args.epochs, save='combined_wgan')
@@ -43,7 +47,7 @@ if __name__ =='__main__':
         interpret_tree(model, train_sqc, test_sqc, df_cols, save=args.file)
     elif args.file == 'wgan' or args.file == 'gan':
         if args.frag_data =='Y':
-            train_sqc, test_sqc, df_cols = preprocess(kind='normal', additional=True, frag_data=False)
+            train_sqc, test_sqc, df_cols = preprocess(kind='normal', additional=None, frag_data=True)
         else:
-            train_sqc, test_sqc, df_cols = preprocess(kind='normal', additional=False, frag_data=False)
+            train_sqc, test_sqc, df_cols = preprocess(kind='normal', additional=None, frag_data=False)
         train(args.file, train_sqc, test_sqc, args.trials, args.retraining, args.epochs, save=args.file)
