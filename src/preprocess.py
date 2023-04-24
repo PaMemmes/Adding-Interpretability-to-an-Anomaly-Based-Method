@@ -71,6 +71,7 @@ class DataFrame():
         self.df = pd.concat([self.df, self.df_frag], ignore_index=True)
 
     def prepare(self, kind=None):
+        self.df = self.df.sample(frac=1)
         df, labels = remove_infs(self.df)
 
         #le = LabelEncoder()
@@ -102,7 +103,7 @@ def get_frags():
     train, test, df_cols = data.make_frag_main_df()
     return train, test, df_cols
 
-def preprocess(kind=None, additional=False, frag_data=False):
+def preprocess(kind=None, additional=None, frag_data=False):
     data = DataFrame()
     
     if kind is None and frag_data == False and additional is None:
