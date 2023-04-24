@@ -95,10 +95,10 @@ def calc_metrics(confusion_matrix):
     print('TN', TN)
     print('FP', FP)
     print('FN', FN)
-    met['TP'] = TP
-    met['TN'] = TN
-    met['FP'] = FP
-    met['FN'] = FN
+    met['TP'] = int(TP)
+    met['TN'] = int(TN)
+    met['FP'] = int(FP)
+    met['FN'] = int(FN)
 
     met['TPR'] = (TP/(TP+FN)).tolist()
     met['TNR'] = (TN/(TN+FP)).tolist()
