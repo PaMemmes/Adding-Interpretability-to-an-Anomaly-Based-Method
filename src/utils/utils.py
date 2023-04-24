@@ -95,23 +95,19 @@ def calc_metrics(confusion_matrix):
     print('TN', TN)
     print('FP', FP)
     print('FN', FN)
+    met['TP'] = TP
+    met['TN'] = TN
+    met['FP'] = FP
+    met['FN'] = FN
 
-    # Sensitivity, hit rate, recall, or true positive rate
     met['TPR'] = (TP/(TP+FN)).tolist()
-    # Specificity or true negative rate
     met['TNR'] = (TN/(TN+FP)).tolist()
-    # Precision or positive predictive value
     met['PPV'] = (TP/(TP+FP)).tolist()
-    # Negative predictive value
     met['NPV'] = (TN/(TN+FN)).tolist()
-    # Fall out or false positive rate
     met['FPR'] = (FP/(FP+TN)).tolist()
-    # False negative rate
     met['FNR'] = (FN/(TP+FN)).tolist()
-    # False discovery rate
     met['FDR'] = (FP/(TP+FP)).tolist()
 
-    # Overall accuracy
     met['ACC'] = ((TP+TN)/(TP+FP+FN+TN)).tolist()
     return met
 
