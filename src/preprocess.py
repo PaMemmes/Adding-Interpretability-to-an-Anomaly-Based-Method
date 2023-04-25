@@ -14,6 +14,7 @@ BATCH_SIZE = 256
 class DataFrame():
     def __init__(self):
         self.df = pd.read_csv('../data/cicids2018/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv')
+        self.df = self.df[:1000000]
         self.df = self.df.drop('Timestamp', axis=1)
         self.df_cols = self.df.columns
         print('Normal data size', self.df.shape)
@@ -30,7 +31,7 @@ class DataFrame():
     def preprocess_frag(self):
         all_files = glob.glob(os.path.join('../data/csv_fragmentedV3', "*.csv"))
         self.df_frag = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
-
+        print('Len frags: ', len(self.df_frag))
         self.df_frag = self.df_frag.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
         assert len(self.df_frag.columns), len(self.df_cols)
 
@@ -95,7 +96,6 @@ class DataFrame():
         self.train_sqc = DataSequence(x_train, y_train, batch_size=BATCH_SIZE)
         self.test_sqc = DataSequence(x_test, y_test, batch_size=BATCH_SIZE)
 
-        return self.train_sqc, self.test_sqc, self.df_cols
 
 def get_frags():
     data = DataFrame()
@@ -107,24 +107,24 @@ def preprocess(kind=None, additional=None, frag_data=False):
     data = DataFrame()
     
     if kind is None and frag_data == False and additional is None:
-        train, test, df_cols = data.prepare()
-        return train, test, df_cols
+        data.prepare()
+        return data
     elif kind is None and frag_data == True and additional is not None:
         data.preprocess_add(additional)
         data.preprocess_frag()
         data.merge_df_all()
-        train, test, df_cols = data.prepare()
-        return train, test, df_cols
+        data.prepare()
+        return data
     elif kind is None and frag_data == True and additional is None:
         data.preprocess_frag()
         data.merge_df_frag()
-        train, test, df_cols = data.prepare()
-        return train, test, df_cols
+        data.prepare()
+        return data
     elif kind is None and frag_data == False and additional is not None:
         data.preprocess_add(additional)
         data.merge_df_add()
-        train, test, df_cols = data.prepare()
-        return train, test, df_cols
+        data.prepare()
+        return data
     else:
-        train, test, df_cols = data.prepare(kind)
-        return train, test, df_cols
+        data.prepare(kind)
+        return data

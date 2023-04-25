@@ -22,44 +22,41 @@ if __name__ =='__main__':
 
     if args.file == 'xg':
         if args.frag_data == 'Y':
-            train_sqc, test_sqc, df_cols = preprocess(kind=None, additional=None, frag_data=True)
+            data = preprocess(kind=None, additional=None, frag_data=True)
             _, frags, _= get_frags()
-            xg_main(train=train_sqc, test=test_sqc, frags=frags, trials=args.trials, save='train_w_frags_xg')
+            xg_main(train=data.train_sqc, test=data.test_sqc, frags=frags, trials=args.trials, save='train_w_frags_xg')
         else:
-            train_sqc, test_sqc, df_cols = preprocess(kind=None, additional=None, frag_data=False)
+            data = preprocess(kind=None, additional=None, frag_data=False)
             _, frags, _= get_frags()
-            xg_main(train=train_sqc, test=test_sqc, frags=frags, trials=args.trials, save='train_wo_frags_xg')
+            xg_main(train=data.train_sqc, test=data.test_sqc, frags=frags, trials=args.trials, save='train_wo_frags_xg')
         
     elif args.file =='combined':
-        train_sqc, test_sqc, df_cols = preprocess(kind='anomaly')
-        model = train('wgan', train_sqc, test_sqc, None, args.trials, args.retraining, args.epochs, save='combined_wgan')
+        data = preprocess(kind='anomaly')
+        model = train('wgan', data.train_sqc, data.test_sqc, None, args.trials, args.retraining, args.epochs, save='combined_wgan')
         gan_data = []
-        for i in range(floor(len(train_sqc.x) / BATCH_SIZE / 10)):
-            noise = tf.random.normal(shape=(BATCH_SIZE, train_sqc.x.shape[1]))
+        for i in range(floor(len(data.train_sqc.x) / BATCH_SIZE / 10)):
+            noise = tf.random.normal(shape=(BATCH_SIZE, data.train_sqc.x.shape[1]))
             fake_x = model.generator(noise, training=False)
             gan_data.append(fake_x)
 
         if args.frag_data =='Y':
-            train_sqc, test_sqc, df_cols = preprocess(kind=None, additional=gan_data, frag_data=True)
+            data = preprocess(kind=None, additional=gan_data, frag_data=True)
             _, frags, _= get_frags()
-            model = xg_main(train=train_sqc, test=test_sqc, frags=frags, trials=args.trials, save='train_w_frags_combined')
+            model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=frags, trials=args.trials, save='train_w_frags_combined')
         else:
-            train_sqc, test_sqc, df_cols = preprocess(kind=None, additional=gan_data, frag_data=False)
+            data = preprocess(kind=None, additional=gan_data, frag_data=False)
             _, frags, _= get_frags()
-            model = xg_main(train=train_sqc, test=test_sqc, frags=frags, trials=args.trials, save='train_wo_frags_combined')
+            model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=frags, trials=args.trials, save='train_wo_frags_combined')
 
-        
-        
-        
-        interpret_tree(model, train_sqc, test_sqc, df_cols, save=args.file)
+        interpret_tree(model, data.train_sqc, data.test_sqc, data.df_cols, save=args.file)
     elif args.file == 'wgan' or args.file == 'gan':
         if args.frag_data =='Y':
-            train_sqc, test_sqc, df_cols = preprocess(kind='normal', additional=None, frag_data=True)
+            data = preprocess(kind='normal', additional=None, frag_data=True)
             _, frags, _= get_frags()
-            train(args.file, train_sqc, test_sqc, frags, args.trials, args.retraining, args.epochs, save='train_w_frags_' + args.file)
+            train(args.file, data.train_sqc, data.test_sqc, frags, args.trials, args.retraining, args.epochs, save='train_w_frags_' + args.file)
 
         else:
-            train_sqc, test_sqc, df_cols = preprocess(kind='normal', additional=None, frag_data=False)
+            data = preprocess(kind='normal', additional=None, frag_data=False)
             _, frags, _= get_frags()
-            train(args.file, train_sqc, test_sqc, frags, args.trials, args.retraining, args.epochs, save='train_wo_frags_' + args.file)
+            train(args.file, data.train_sqc, data.test_sqc, frags, args.trials, args.retraining, args.epochs, save='train_wo_frags_' + args.file)
 
