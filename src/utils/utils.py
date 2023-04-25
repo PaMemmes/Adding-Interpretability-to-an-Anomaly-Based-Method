@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, confusion_matrix, accuracy_score, roc_auc_score,confusion_matrix,accuracy_score,classification_report,roc_curve
 
 import tensorflow as tf
 # Labels normal data as 0, anomalies as 1
@@ -64,6 +65,27 @@ def scale(x_train, x_test):
 
     return x_train, x_test
 
+def calc_all(model, test):
+    threshold = .5
+    true_labels = test.y.astype(int)
+
+    preds = model.predict(test.x)
+    pred_labels = (preds > threshold).astype(int)
+    accuracy = accuracy_score(true_labels, pred_labels)
+    cm = confusion_matrix(true_labels, pred_labels)
+    cm_norm = confusion_matrix(true_labels, pred_labels, normalize='all')
+    precision, recall, f1, _ = precision_recall_fscore_support(test.y, pred_labels, average='binary')
+    accuracy = accuracy_score(test.y, pred_labels)
+    fpr, tpr, thresholds = roc_curve(test.y, preds)
+    auc_val = auc(fpr, tpr)
+
+    metrics = calc_metrics(cm)
+    metrics['f1'] = f1
+    metrics['AUC'] = auc_val
+    d = dict(metrics)
+
+    return d, cm, cm_norm, preds
+
 def test_model(model, test):
     nr_batches_test = np.ceil(test.x.shape[0] // test.batch_size).astype(np.int32)
     results = []
@@ -85,7 +107,7 @@ def calc_metrics(confusion_matrix):
     FN = (confusion_matrix.sum(axis=1) - np.diag(confusion_matrix))
     TP = np.diag(confusion_matrix)
     TN = (confusion_matrix.sum() - (FP + FN + TP))
-
+    print(FP)
     FP = FP[1]
     FN = FN[1]
     TP = TP[1]

@@ -8,17 +8,15 @@ import os
 import pandas as pd
 from copy import copy
 from time import time
-from sklearn.metrics import roc_auc_score,confusion_matrix,accuracy_score,classification_report,roc_curve
 import json
 from time import time
 
-from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, confusion_matrix, accuracy_score
 from utils.plots import  plot_roc, plot_precision_recall
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import RandomizedSearchCV
 
-from utils.utils import calc_metrics
+from utils.utils import calc_all
 from utils.plots import plot_confusion_matrix
 import matplotlib.pyplot as plt
 import pickle
@@ -26,26 +24,6 @@ import scipy.stats as stats
 
 FILENAME = '../data/preprocessed_data.pickle'
 
-def calc_all(model, test):
-    threshold = .5
-    true_labels = test.y.astype(int)
-
-    preds = model.predict(test.x)
-    pred_labels = (preds > threshold).astype(int)
-    accuracy = accuracy_score(true_labels, pred_labels)
-    cm = confusion_matrix(true_labels, pred_labels)
-    cm_norm = confusion_matrix(true_labels, pred_labels, normalize='all')
-    precision, recall, f1, _ = precision_recall_fscore_support(test.y, pred_labels, average='binary')
-    accuracy = accuracy_score(test.y, pred_labels)
-    fpr, tpr, thresholds = roc_curve(test.y, preds)
-    auc_val = auc(fpr, tpr)
-
-    metrics = calc_metrics(cm)
-    metrics['f1'] = f1
-    metrics['AUC'] = auc_val
-    d = dict(metrics)
-
-    return d, cm, cm_norm, preds
 
 def xg_main(train, test, frags, trials, save='xg'):
     name = '../experiments/' + save + '/best/'
