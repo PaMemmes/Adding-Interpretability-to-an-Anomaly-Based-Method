@@ -9,7 +9,6 @@ from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 # Labels normal data as 0, anomalies as 1
 def make_labels_binary(label_encoder, labels):
-    print('LABEL ENCODER', np.where(label_encoder.classes_ == 'Benign'))
     normal_data_index = np.where(label_encoder.classes_ == 'Benign')[0][0]
     new_labels = labels.copy()
     new_labels[labels != normal_data_index] = 1
@@ -86,15 +85,12 @@ def calc_metrics(confusion_matrix):
     FN = (confusion_matrix.sum(axis=1) - np.diag(confusion_matrix))
     TP = np.diag(confusion_matrix)
     TN = (confusion_matrix.sum() - (FP + FN + TP))
+
     FP = FP[1]
     FN = FN[1]
     TP = TP[1]
     TN = TN[1]
 
-    print('TP', TP)
-    print('TN', TN)
-    print('FP', FP)
-    print('FN', FN)
     met['TP'] = int(TP)
     met['TN'] = int(TN)
     met['FP'] = int(FP)
