@@ -50,10 +50,6 @@ def calc_all(model, test):
 def xg_main(train, test, frags, trials, save='xg'):
     name = '../experiments/' + save + '/best/'
     Path(name).mkdir(parents=True, exist_ok=True)
-    assert train.x.shape[0] == train.y.shape[0]
-    assert test.x.shape[0] == test.y.shape[0]
-    assert test.x.shape[1] == train.x.shape[1]
-    train.y = train.y.astype(int)
     
     params = {
         'num_rounds':        10,
@@ -78,6 +74,7 @@ def xg_main(train, test, frags, trials, save='xg'):
     }
     #dtrain = xgb.DMatrix(train.x, label=train.y, feature_weights=feature_weights)
     #dtest = xgb.DMatrix(test.x, label=test.y, feature_weights=feature_weights)
+
     bst = xgb.XGBClassifier(**params)
     clf = RandomizedSearchCV(bst, hyperparameter_grid, random_state=0, n_iter=trials)
     
@@ -85,12 +82,16 @@ def xg_main(train, test, frags, trials, save='xg'):
     model = clf.fit(train.x, train.y)
     print("GridSearchCV took %.2f seconds for %d candidate parameter settings." % (time() - start, len(clf.cv_results_["params"])) )  
     print(clf.cv_results_)
-
     print(model.best_params_)
-    
-    if frags is not None:
-        metrics_frag, cm_frag, cm_frag_norm, preds_frag = calc_all(model, frags)
-    
+
+    metrics_frag, cm_frag, cm_frag_norm, preds_frag = calc_all(model, frags)
+    print('Metrics frag', metrics_frag)
+    plot_confusion_matrix(cm_frag, savefile=name + save + '_frags_cm.pdf', name=save)
+    plot_confusion_matrix(cm_frag_norm, savefile=name + save + '_frags_cm_normalized.pdf', name=save)
+    plot_roc(metrics_frag['TPR'], metrics_frag['FPR'], metrics_frag['AUC'], name + save + '_frags_roc.pdf', name=save)
+    preds_frag = np.vstack((1-preds_frag, preds_frag)).T
+    # plot_precision_recall(frags.y, preds_frag, name + save + '_frags_precision_recall.pdf')
+
     metrics, cm, cm_norm, preds = calc_all(model, test)
     plot_confusion_matrix(cm, savefile=name + save + '_cm.pdf', name=save)
     plot_confusion_matrix(cm_norm, savefile=name + save + '_cm_normalized.pdf', name=save)
