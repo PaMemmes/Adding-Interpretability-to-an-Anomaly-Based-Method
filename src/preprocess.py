@@ -14,11 +14,11 @@ BATCH_SIZE = 256
 class DataFrame():
     def __init__(self):
         self.df = pd.read_csv('../data/cicids2018/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv')
-        self.df = self.df[:1000000]
+        self.df = self.df[:50000]
         self.df = self.df.drop('Timestamp', axis=1)
         self.df_cols = self.df.columns
-        print('Normal data size', self.df.shape)
 
+        # Auxialliary df for LabelEncoder() to encode the right number of labels
         df_exe = pd.read_csv('../data/csv_fragmentedV3/All.ElectroRAT.pcap_Flow.csv')
         df_exe = df_exe.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
         df_exe['Label'] = 'Fragmented Malware'
@@ -31,7 +31,6 @@ class DataFrame():
     def preprocess_frag(self):
         all_files = glob.glob(os.path.join('../data/csv_fragmentedV3', "*.csv"))
         self.df_frag = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
-        print('Len frags: ', len(self.df_frag))
         self.df_frag = self.df_frag.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
         assert len(self.df_frag.columns), len(self.df_cols)
 
@@ -75,14 +74,11 @@ class DataFrame():
         self.df = self.df.sample(frac=1)
         df, labels = remove_infs(self.df)
 
-        #le = LabelEncoder()
-        #le.fit(labels)
         labels = encode(self.le, labels)
+        
+        labels = make_labels_binary(self.le, labels)
 
         x_train, x_test, y_train, y_test = train_test_split(df, labels, test_size=0.2)
-
-        y_train = make_labels_binary(self.le, y_train)
-        y_test = make_labels_binary(self.le, y_test)
 
         # Subsetting only Normal Network packets in training set
         if kind == 'normal':

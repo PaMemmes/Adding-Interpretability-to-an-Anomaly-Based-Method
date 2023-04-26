@@ -24,7 +24,6 @@ import scipy.stats as stats
 
 FILENAME = '../data/preprocessed_data.pickle'
 
-
 def xg_main(train, test, frags, trials, save='xg'):
     name = '../experiments/' + save + '/best/'
     Path(name).mkdir(parents=True, exist_ok=True)
@@ -63,7 +62,6 @@ def xg_main(train, test, frags, trials, save='xg'):
     print(model.best_params_)
 
     metrics_frag, cm_frag, cm_frag_norm, preds_frag = calc_all(model, frags)
-    print('Metrics frag', metrics_frag)
     plot_confusion_matrix(cm_frag, savefile=name + save + '_frags_cm.pdf', name=save)
     plot_confusion_matrix(cm_frag_norm, savefile=name + save + '_frags_cm_normalized.pdf', name=save)
     plot_roc(metrics_frag['TPR'], metrics_frag['FPR'], metrics_frag['AUC'], name + save + '_frags_roc.pdf', name=save)

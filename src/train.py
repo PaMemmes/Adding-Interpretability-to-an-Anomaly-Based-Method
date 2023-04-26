@@ -66,8 +66,6 @@ def train(model_name, train, test, frags=None, num_trials=1, num_retraining=1, e
             
             metrics_frag, cm_frag, cm_norm_frag = calc_all_nn(frags, y_pred_frag, probas_frag)
 
-            print('anomalies perc', anomalies_percentage_frag)
-            print('Frags metrics: ', metrics_frag)
             plot_confusion_matrix(cm_frag, name + '/cm_frag.pdf', save)
             plot_confusion_matrix(cm_norm_frag, name + '/cm_frag_normalized.pdf', save)
             plot_roc(metrics_frag['TPR'], metrics_frag['FPR'], metrics_frag['AUC'], name + '/frag_roc.pdf', save)
