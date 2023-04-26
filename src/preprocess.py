@@ -28,6 +28,12 @@ class DataFrame():
         self.le = LabelEncoder()
         self.le.fit(labels)
 
+        # Make-out-of-sample test split, s.t. additional data is not incorporated
+        df, labels = remove_infs(self.df)
+        labels = encode(self.le, labels)
+        labels = make_labels_binary(self.le, labels)
+        _, self.x_test, _, self.y_test = train_test_split(df, labels, test_size=0.2)
+
     def preprocess_frag(self):
         all_files = glob.glob(os.path.join('../data/csv_fragmentedV3', "*.csv"))
         self.df_frag = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
@@ -42,10 +48,10 @@ class DataFrame():
         df, labels = remove_infs(df)
 
         labels = encode(self.le, labels)
+        labels = make_labels_binary(self.le, labels)
+
         x_train, x_test, y_train, y_test = train_test_split(df, labels, test_size=0.2)
 
-        y_train = make_labels_binary(self.le, y_train)
-        y_test = make_labels_binary(self.le, y_test)
         x_train, x_test = scale(x_train, x_test)
 
         self.train_sqc = DataSequence(x_train, y_train, batch_size=BATCH_SIZE)
@@ -73,12 +79,9 @@ class DataFrame():
     def prepare(self, kind=None):
         self.df = self.df.sample(frac=1)
         df, labels = remove_infs(self.df)
-
         labels = encode(self.le, labels)
-        
         labels = make_labels_binary(self.le, labels)
-
-        x_train, x_test, y_train, y_test = train_test_split(df, labels, test_size=0.2)
+        x_train, _, y_train, _ = train_test_split(df, labels, test_size=0.2)
 
         # Subsetting only Normal Network packets in training set
         if kind == 'normal':
@@ -87,10 +90,10 @@ class DataFrame():
             x_train, y_train = subset(x_train, y_train, 1)
             print('Using only anomaly data')
 
-        x_train, x_test = scale(x_train, x_test)
+        x_train, self.x_test = scale(x_train, self.x_test)
 
         self.train_sqc = DataSequence(x_train, y_train, batch_size=BATCH_SIZE)
-        self.test_sqc = DataSequence(x_test, y_test, batch_size=BATCH_SIZE)
+        self.test_sqc = DataSequence(self.x_test, self.y_test, batch_size=BATCH_SIZE)
 
 
 def get_frags():
