@@ -24,12 +24,13 @@ if __name__ =='__main__':
         if args.frag_data == 'Y':
             data = preprocess(kind=None, additional=None, frag_data=True)
             _, frags, _= get_frags()
-            xg_main(train=data.train_sqc, test=data.test_sqc, frags=frags, trials=args.trials, save='train_w_frags_xg')
+            model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=frags, trials=args.trials, save='train_w_frags_xg')
+            interpret_tree(model, data.train_sqc, data.test_sqc, data.df_cols, save='train_w_frags_xg')
         else:
             data = preprocess(kind=None, additional=None, frag_data=False)
             _, frags, _= get_frags()
-            xg_main(train=data.train_sqc, test=data.test_sqc, frags=frags, trials=args.trials, save='train_wo_frags_xg')
-        
+            model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=frags, trials=args.trials, save='train_wo_frags_xg')
+            interpret_tree(model, data.train_sqc, data.test_sqc, data.df_cols, save='train_wo_frags_xg')
     elif args.file =='combined':
         data = preprocess(kind='anomaly')
         model = train('wgan', data.train_sqc, data.test_sqc, None, args.trials, args.retraining, args.epochs, save='combined_wgan')
@@ -43,12 +44,13 @@ if __name__ =='__main__':
             data = preprocess(kind=None, additional=gan_data, frag_data=True)
             _, frags, _= get_frags()
             model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=frags, trials=args.trials, save='train_w_frags_combined')
+            interpret_tree(model, data.train_sqc, data.test_sqc, data.df_cols, save='train_w_frags_combined')
         else:
             data = preprocess(kind=None, additional=gan_data, frag_data=False)
             _, frags, _= get_frags()
             model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=frags, trials=args.trials, save='train_wo_frags_combined')
-
-        interpret_tree(model, data.train_sqc, data.test_sqc, data.df_cols, save=args.file)
+            interpret_tree(model, data.train_sqc, data.test_sqc, data.df_cols, save='train_wo_frags_combined')
+        
     elif args.file == 'wgan' or args.file == 'gan':
         if args.frag_data =='Y':
             data = preprocess(kind='normal', additional=None, frag_data=True)
