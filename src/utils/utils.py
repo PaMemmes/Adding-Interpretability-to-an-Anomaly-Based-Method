@@ -1,6 +1,7 @@
 import json
 import math
 
+import collections
 import pandas as pd
 import numpy as np
 from collections import defaultdict
@@ -57,6 +58,11 @@ def encode(le, labels):
 
     return labels
 
+def open_config(model_name):
+    with open('configs/config_' + model_name + '.json', 'r', encoding='utf-8') as f:
+        config = json.loads(f.read())
+    return config
+
 def scale(x_train, x_test):
     scaler = MinMaxScaler()
 
@@ -64,6 +70,40 @@ def scale(x_train, x_test):
     x_test = scaler.transform(x_test)
 
     return x_train, x_test
+
+def get_preds(results, train):
+
+    normals = collections.Counter(train.y)[0]
+    anomalies = collections.Counter(train.y)[1]
+    anomalies_percentage = anomalies / (normals + anomalies)
+    
+    # Obtaining the lowest "anomalies_percentage" score
+    per = np.percentile(results, anomalies_percentage*100)
+    results = np.array(results)
+    y_pred = results.copy()
+    probas = np.vstack((1-y_pred, y_pred)).T
+
+    inds = y_pred > per
+    inds_comp = y_pred <= per
+    y_pred[inds] = 0
+    y_pred[inds_comp] = 1
+    return y_pred, probas, per, anomalies_percentage
+
+def calc_all_nn(test, y_pred, probas):
+    precision, recall, f1, _ = precision_recall_fscore_support(test.y, y_pred, average='binary')
+    accuracy = accuracy_score(test.y, y_pred)
+    fpr, tpr, thresholds = roc_curve(test.y, probas[:,0])
+    
+    auc_val = auc(fpr, tpr)
+    cm = confusion_matrix(test.y, y_pred)
+    cm_norm = confusion_matrix(test.y, y_pred, normalize='all')
+    metrics = calc_metrics(cm)
+    _, _, metrics['f1'], _ = precision_recall_fscore_support(test.y, y_pred, average='binary')
+    metrics['AUC'] = auc_val
+    d = dict(metrics)
+
+    return d, cm, cm_norm
+
 
 def calc_all(model, test):
     threshold = .5
@@ -74,7 +114,7 @@ def calc_all(model, test):
     accuracy = accuracy_score(true_labels, pred_labels)
     cm = confusion_matrix(true_labels, pred_labels)
     cm_norm = confusion_matrix(true_labels, pred_labels, normalize='all')
-    precision, recall, f1, _ = precision_recall_fscore_support(test.y, pred_labels, average='binary')
+    _, _, f1, _ = precision_recall_fscore_support(test.y, pred_labels, average='binary')
     accuracy = accuracy_score(test.y, pred_labels)
     fpr, tpr, thresholds = roc_curve(test.y, preds)
     auc_val = auc(fpr, tpr)
@@ -126,6 +166,7 @@ def calc_metrics(confusion_matrix):
     met['FNR'] = (FN/(TP+FN)).tolist()
     met['FDR'] = (FP/(TP+FP)).tolist()
 
+    met['BACC'] = (met['TPR'] + met['TNR']) / 2
     met['ACC'] = ((TP+TN)/(TP+FP+FN+TN)).tolist()
     return met
 
