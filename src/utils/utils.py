@@ -147,16 +147,14 @@ def calc_metrics(confusion_matrix):
     FN = (confusion_matrix.sum(axis=1) - np.diag(confusion_matrix))
     TP = np.diag(confusion_matrix)
     TN = (confusion_matrix.sum() - (FP + FN + TP))
-    print(FP)
+
     FP = FP[1]
     FN = FN[1]
     TP = TP[1]
     TN = TN[1]
 
-    met['TP'] = int(TP)
-    met['TN'] = int(TN)
-    met['FP'] = int(FP)
-    met['FN'] = int(FN)
+    met['BACC'] = ((TP/(TP+FN)).tolist() + (TN/(TN+FP)).tolist()) / 2
+    met['ACC'] = ((TP+TN)/(TP+FP+FN+TN)).tolist()
 
     met['TPR'] = (TP/(TP+FN)).tolist()
     met['TNR'] = (TN/(TN+FP)).tolist()
@@ -166,8 +164,11 @@ def calc_metrics(confusion_matrix):
     met['FNR'] = (FN/(TP+FN)).tolist()
     met['FDR'] = (FP/(TP+FP)).tolist()
 
-    met['BACC'] = (met['TPR'] + met['TNR']) / 2
-    met['ACC'] = ((TP+TN)/(TP+FP+FN+TN)).tolist()
+    met['TP'] = int(TP)
+    met['TN'] = int(TN)
+    met['FP'] = int(FP)
+    met['FN'] = int(FN)
+
     return met
 
 
