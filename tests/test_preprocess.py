@@ -1,7 +1,9 @@
 import pytest
 import pandas as pd
 import numpy as np
-from src.utils.utils import remove_infs
+from src.utils.utils import remove_infs, encode
+
+from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 
 @pytest.fixture
 def example_df():
@@ -16,3 +18,10 @@ def test_remove_infs(example_df):
     assert np.isinf(df).sum().sum() == 0
 
 
+def test_encode(example_df):
+    le = LabelEncoder()
+    le.fit(example_df['Label'])
+    labels = encode(le, example_df['Label'])
+    for elem in labels:
+        assert isinstance(elem, np.int64)
+    assert len(np.unique(labels)) == 6
