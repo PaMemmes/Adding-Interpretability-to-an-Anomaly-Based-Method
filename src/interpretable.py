@@ -5,17 +5,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 FILENAME = '../data/preprocessed_data.pickle'
 
-def interpret_tree(model, save):
+def interpret_tree(model, train, test, df_cols, save):
     name = '../experiments/' + save + '/best/'
     print('Starting interpreting...')
-    input_file = open(FILENAME, 'rb')
-    preprocessed_data = pickle.load(input_file)
-    input_file.close()
 
-    dataset = preprocessed_data['dataset']
-    df_cols = preprocessed_data['cols']
-    train = dataset['train']
-    test = dataset['test']
     df_cols = df_cols[:-1]
     test_df = pd.DataFrame(test.x, columns=df_cols)
     explainer = shap.TreeExplainer(model)
@@ -27,11 +20,11 @@ def interpret_tree(model, save):
     print('After force plot')
     shap.summary_plot(shap_values, test.x, plot_type="bar", feature_names=df_cols, show=False)
     f = plt.gcf()
-    f.savefig(name + 'summary_bar.png', bbox_inches='tight', dpi=300)
+    f.savefig(name + 'summary_bar.pdf', bbox_inches='tight', dpi=300)
     plt.close()
     print('After first summary plot')
     shap.summary_plot(shap_values, test.x, feature_names=df_cols, show=False)
     f = plt.gcf()
-    f.savefig(name + 'summary.png', bbox_inches='tight', dpi=300)
+    f.savefig(name + 'summary.pdf', bbox_inches='tight', dpi=300)
     plt.close()
     print('End interpreting...')

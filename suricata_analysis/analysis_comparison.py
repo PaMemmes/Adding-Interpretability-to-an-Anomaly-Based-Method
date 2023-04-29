@@ -1,0 +1,120 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import scienceplots
+import itertools
+import os
+import glob
+
+import re
+from collections import defaultdict
+import orjson
+
+from plots import plot_categories, plot_alert_distribution, plot_comparison_severity_distribution, plot_comparison_packet_alerts, plot_alerts
+from plots import plot_severity_distribution, plot_packet_alerts, plot_comparison_categories
+from utils import get_alerts_and_packets, get_json_data, get_signatures
+
+CB91_Blue = '#2CBDFE'
+CB91_Green = '#47DBCD'
+CB91_Pink = '#F3A0F2'
+CB91_Purple = '#9D2EC5'
+CB91_Violet = '#661D98'
+CB91_Amber = '#F5B14C'
+
+class AllDataHolder():
+    def __init__(self, original, frag, frag_random):
+        self.original = DataHolder('original')
+        self.frag = DataHolder('fragmented')
+        self.frag_random = DataHolder('fragmented_random')
+        
+        self.original.process_data()
+        self.frag.process_data()
+        self.frag_random.process_data()
+
+    def make_comp_plots(self):
+        plot_comparison_packet_alerts(self.original.packets_sum, self.frag.packets_sum, self.frag_random.packets_sum, self.original.sigs_sum, self.frag.sigs_sum, self.frag_random.sigs_sum, save='plots/packet_alerts_both.pdf')
+        plot_comparison_severity_distribution(self.original.sev_dist, self.frag.sev_dist, self.frag_random.sev_dist, save='plots/severity_dist_comp.pdf')
+        plot_comparison_categories(self.original.category_dist, self.frag.category_dist, self.frag_random.category_dist, save='plots/category_dist_comp.pdf')
+    
+    def make_individual_plots(self):
+        self.original.make_plots()
+        self.frag.make_plots()
+        self.frag_random.make_plots()
+
+class DataHolder():
+    def __init__(self, kind):
+        self.kind = kind
+
+        self.packets = []
+        self.signatures = []
+        self.severity = []
+        self.categories = []
+
+        self.sigs_dist = defaultdict(int)
+        self.sev_dist = defaultdict(int)
+        self.category_dist = defaultdict(int)
+
+        self.sigs_sum = 0
+        self.packets_sum = 0
+
+    def process_data(self):
+        for filepath in sorted(glob.glob('theZoo_' + self.kind + '/**/*.json')):
+            json_file = get_json_data(filepath)
+            # print(json_file)
+            alerts, packets = get_alerts_and_packets(json_file)
+            nmbr_signatures, severity, cats= get_signatures(alerts)
+            self.packets.append(packets)
+            self.signatures.append(nmbr_signatures)
+            self.severity.append(severity)
+            self.categories.append(cats)
+
+
+        self.sigs_sum = sum([sum(elem.values()) for elem in self.signatures])
+        self.packets_sum = sum(self.packets)
+        
+        for signatures in self.signatures:
+            for key, value in signatures.items():
+                self.sigs_dist[key] += value
+        
+        for signatures in self.severity:
+            for key, value in signatures.items():
+                self.sev_dist[key] += value
+        
+        # Set value "0" for every key that is existent
+        for key in np.arange(len(self.sev_dist)):
+            if key not in self.sev_dist.keys():
+                self.sev_dist[key] = 0
+
+        for cat in self.categories:
+            for key, value in cat.items():
+                self.category_dist[key] += value
+        
+        print(f'Total packets of {self.kind}: {self.packets_sum}')
+        print(f'Total signatures {self.kind}: {self.sigs_sum}')
+        print(f'Total categories {self.kind}: {sum(self.category_dist.values())}')
+        print(f'Total sev dist {self.kind}: {sum(self.sev_dist.values())}')
+        print(f'Total sigs_dist {self.kind}: {sum(self.sigs_dist.values())}\n')
+
+    def plot_file(self, file):
+        filepath = 'theZoo_' + self.kind + '/' + file + '/eve.json'
+        json_data = get_json_data(filepath)
+        alerts, _ = get_alerts_and_packets(json_data)
+        nmbr_signatures, _, _ = get_signatures(alerts)
+
+        plot_alerts(nmbr_signatures, file, save=f'plots/' + file + '_' + self.kind + '.pdf')
+
+    def make_plots(self):
+        plot_alert_distribution(self.sigs_dist, save='plots/alert_dist_' + self.kind + '.pdf')
+        plot_severity_distribution(self.sev_dist, save='plots/severity_dist_' + self.kind + '.pdf')
+        plot_packet_alerts(self.packets_sum, self.sigs_sum, save='plots/packet_alerts_' + self.kind + '.pdf')
+        plot_categories(self.category_dist, save='plots/cat_dist_' + self.kind + '.pdf')
+        self.plot_file('All.ElectroRAT')
+
+if __name__ == '__main__':
+    #color_list = [CB91_Blue, CB91_Pink, CB91_Green, CB91_Amber,
+     #           CB91_Purple, CB91_Violet]
+    #plt.rcParams['axes.prop_cycle'] = plt.cycler(color=color_list)
+
+    all_data = AllDataHolder(DataHolder('original'), DataHolder('fragmented'), DataHolder('fragmented_random'))
+    all_data.make_comp_plots()
+    all_data.make_individual_plots()

@@ -94,7 +94,6 @@ def calculate_accuracy(preds, y):
     preds[inds] = 0
     preds[inds_comp] = 1
     acc = accuracy_score(preds, y)
-    print('Accuracy: ', acc)
     return acc
         
 class HyperWGAN(keras_tuner.HyperModel):
