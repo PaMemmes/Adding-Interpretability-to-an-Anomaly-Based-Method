@@ -198,6 +198,6 @@ class HyperWGAN(keras_tuner.HyperModel):
         x, y = data.x, data.y
         model.fit(x, y, batch_size=data.batch_size, **kwargs)
         preds = model.discriminator.predict(x)
-        kl = self.mean_kl_score(y.to_numpy(), preds)
+        kl = self.mean_kl_score(y, preds)
         #return kl
         return (model.dis_loss_tracker.result().numpy() + model.gen_loss_tracker.result().numpy()) / 2

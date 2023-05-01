@@ -15,7 +15,7 @@ plt.style.use(['ieee', 'science'])
 
 def make_xlabels(data, chars=None):
     x_ticks = [i for i in data.keys()]
-    labels = [ '\n'.join(wrap(l, chars)) for l in x_ticks ]
+    labels = ['\n'.join(wrap(l, chars)) for l in x_ticks]
     return labels
 
 def plot_comparison_severity_distribution(dist1, dist2, dist3, save=None):
