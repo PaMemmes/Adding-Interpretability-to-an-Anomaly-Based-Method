@@ -43,12 +43,11 @@ def train(model_name, train, test, frags=None, num_trials=1, num_retraining=1, e
 
         results_df, results = test_model(hypermodel, test)
         y_pred, probas, per, anomalies_percentage = get_preds(results, train)
-
         metrics, cm, cm_norm = calc_all_nn(test, y_pred, probas)
         plot_confusion_matrix(cm, name + '/cm.pdf', save)
         plot_confusion_matrix(cm_norm, name + '/cm_normalized.pdf', save)
         plot_roc(metrics['TPR'], metrics['FPR'], metrics['AUC'], name + '/roc.pdf', save)
-        plot_precision_recall(test.y, probas, name + '/precision_recall.pdf')
+        #plot_precision_recall(test.y, probas, name + '/precision_recall.pdf')
         results = {
                 'Anomalies percentage': anomalies_percentage,
                 'Cutoff': per,
@@ -69,7 +68,7 @@ def train(model_name, train, test, frags=None, num_trials=1, num_retraining=1, e
             plot_confusion_matrix(cm_frag, name + '/cm_frag.pdf', save)
             plot_confusion_matrix(cm_norm_frag, name + '/cm_frag_normalized.pdf', save)
             plot_roc(metrics_frag['TPR'], metrics_frag['FPR'], metrics_frag['AUC'], name + '/frag_roc.pdf', save)
-            # plot_precision_recall(frags.y, probas, name + '/frag_precision_recall.pdf')
+            #plot_precision_recall(frags.y, probas, name + '/frag_precision_recall.pdf')
             results = {
                     'Anomalies percentage': anomalies_percentage,
                     'Cutoff': per,

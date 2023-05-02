@@ -7,9 +7,17 @@ import numpy as np
 from collections import defaultdict
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, confusion_matrix, accuracy_score, roc_auc_score,confusion_matrix,accuracy_score,classification_report,roc_curve
+import glob
+import os
 
 import tensorflow as tf
-# Labels normal data as 0, anomalies as 1
+
+def read_csv():
+    #all_files = glob.glob(os.path.join('../data/cicids2018', "*.csv"))
+    #df = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
+    df = pd.read_csv('../data/cicids2018/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv')
+    return df
+
 def make_labels_binary(label_encoder, labels):
     normal_data_index = np.where(label_encoder.classes_ == 'Benign')[0][0]
     new_labels = labels.copy()
@@ -63,14 +71,6 @@ def open_config(model_name):
         config = json.loads(f.read())
     return config
 
-def scale(x_train, x_test):
-    scaler = MinMaxScaler()
-
-    x_train = scaler.fit_transform(x_train)
-    x_test = scaler.transform(x_test)
-
-    return x_train, x_test
-
 def get_preds(results, train):
 
     normals = collections.Counter(train.y)[0]
@@ -111,6 +111,8 @@ def calc_all(model, test):
 
     preds = model.predict(test.x)
     pred_labels = (preds > threshold).astype(int)
+    print('Preds', pred_labels)
+    print('True labels', true_labels)
     accuracy = accuracy_score(true_labels, pred_labels)
     cm = confusion_matrix(true_labels, pred_labels)
     cm_norm = confusion_matrix(true_labels, pred_labels, normalize='all')
@@ -147,11 +149,17 @@ def calc_metrics(confusion_matrix):
     FN = (confusion_matrix.sum(axis=1) - np.diag(confusion_matrix))
     TP = np.diag(confusion_matrix)
     TN = (confusion_matrix.sum() - (FP + FN + TP))
-
-    FP = FP[1]
-    FN = FN[1]
-    TP = TP[1]
-    TN = TN[1]
+ 
+    if len(FP) == 2:
+        FP = FP[1]
+        FN = FN[1]
+        TP = TP[1]
+        TN = TN[1]
+    else:
+        FP = FP[0]
+        FN = FN[0]
+        TP = TP[0]
+        TN = TN[0]
 
     met['BACC'] = ((TP/(TP+FN)).tolist() + (TN/(TN+FP)).tolist()) / 2
     met['ACC'] = ((TP+TN)/(TP+FP+FN+TN)).tolist()
@@ -170,7 +178,6 @@ def calc_metrics(confusion_matrix):
     met['FN'] = int(FN)
 
     return met
-
 
 class DataSequence(tf.keras.utils.Sequence):
     def __init__(self, x_set, y_set, batch_size):

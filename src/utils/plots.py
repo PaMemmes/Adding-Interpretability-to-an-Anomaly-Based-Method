@@ -4,6 +4,7 @@ import scikitplot as skplt
 
 def plot_confusion_matrix(cm, savefile, name, cmap=plt.cm.Greens):
     fig, ax = plt.subplots()
+    cm = np.around(cm, decimals=6)
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title('Confusion matrix ' + name)
     plt.colorbar()
@@ -69,6 +70,8 @@ def plot_losses(gen_loss, dis_loss, savefile):
 
 def plot_precision_recall(y_test, y_preds, savefile):
     fig, ax = plt.subplots()
+    print(y_test.shape)
+    print(y_preds.shape)
     skplt.metrics.plot_precision_recall(y_test, y_preds)
     plt.savefig(savefile)
     plt.close('all')
