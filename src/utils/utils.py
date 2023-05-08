@@ -12,6 +12,28 @@ import os
 
 import tensorflow as tf
 
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
+class DataSequence(tf.keras.utils.Sequence):
+    def __init__(self, x_set, y_set, batch_size):
+        self.x, self.y = x_set.astype(np.float32), y_set.astype(np.float32)
+        self.batch_size = batch_size
+
+    def __len__(self):
+        return math.ceil(len(self.x) / self.batch_size)
+
+    def __getitem__(self, idx):
+        batch_x = self.x[idx * self.batch_size:(idx + 1) *
+        self.batch_size]
+        batch_y = self.y[idx * self.batch_size:(idx + 1) *
+        self.batch_size]
+
+        return np.array(batch_x), np.array(batch_y)
+
 def read_csv():
     #all_files = glob.glob(os.path.join('../data/cicids2018', "*.csv"))
     #df = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
@@ -104,7 +126,6 @@ def calc_all_nn(test, y_pred, probas):
 
     return d, cm, cm_norm
 
-
 def calc_all(model, test):
     threshold = .5
     true_labels = test.y.astype(int)
@@ -176,19 +197,3 @@ def calc_metrics(confusion_matrix):
     met['FN'] = int(FN)
 
     return met
-
-class DataSequence(tf.keras.utils.Sequence):
-    def __init__(self, x_set, y_set, batch_size):
-        self.x, self.y = x_set.astype(np.float32), y_set.astype(np.float32)
-        self.batch_size = batch_size
-
-    def __len__(self):
-        return math.ceil(len(self.x) / self.batch_size)
-
-    def __getitem__(self, idx):
-        batch_x = self.x[idx * self.batch_size:(idx + 1) *
-        self.batch_size]
-        batch_y = self.y[idx * self.batch_size:(idx + 1) *
-        self.batch_size]
-
-        return np.array(batch_x), np.array(batch_y)
