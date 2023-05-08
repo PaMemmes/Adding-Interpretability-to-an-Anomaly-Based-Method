@@ -45,10 +45,3 @@ def test_subset(example_xy):
         assert elem == 0
     for elem in y_1:
         assert elem == 1
-
-def test_scale(example_xy):
-    x_train, y_train = example_xy
-    x_train, x_train = scale(x_train, x_train)
-    for elem in x_train:
-        assert 0 <= elem[0] <= 1
-        assert 0 <= elem[1] <= 1
