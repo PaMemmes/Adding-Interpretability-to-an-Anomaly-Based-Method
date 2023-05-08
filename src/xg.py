@@ -47,7 +47,9 @@ def xg_main(train, test, frags, trials, save='xg'):
     hyperparameter_grid = {
         'max_depth': [3, 6, 9],
         'learning_rate': [0.05, 0.1, 0.20],
-        'max_leaves': [2**4, 2**6, 2**8]
+        'max_leaves': [2**4, 2**6, 2**8],
+        'eta': [x for x in np.linspace(0.1, 0.6, 6)],
+        'gamma': [int(x) for x in np.linspace(0, 0.5, 6)]
     }
 
     bst = xgb.XGBClassifier(**params)
@@ -55,8 +57,7 @@ def xg_main(train, test, frags, trials, save='xg'):
     
     start = time()
     model = clf.fit(train.x, train.y)
-    print("GridSearchCV took %.2f seconds for %d candidate parameter settings." % (time() - start, len(clf.cv_results_["params"])) )  
-    print(clf.cv_results_)
+    print("GridSearchCV took %.2f seconds for %d candidate parameter settings." % (time() - start, len(clf.cv_results_["params"])))  
     print(model.best_params_)
 
     metrics_train, cm_train, cm_norm_train, preds_train = calc_all(model, train)
@@ -64,8 +65,6 @@ def xg_main(train, test, frags, trials, save='xg'):
     plot_confusion_matrix(cm_norm_train, savefile=name + save + '_cm_normalized_train.pdf', name=save)
     plot_roc(metrics_train['TPR'], metrics_train['FPR'], metrics_train['AUC'], name + save + '_roc_train.pdf', name=save)
     preds_train = np.vstack((1-preds_train, preds_train)).T
-
-
 
     metrics, cm, cm_norm, preds = calc_all(model, test)
     plot_confusion_matrix(cm, savefile=name + save + '_cm.pdf', name=save)
@@ -85,7 +84,8 @@ def xg_main(train, test, frags, trials, save='xg'):
     results = {
             'Metrics': metrics,
             'Metrics frag': metrics_frag,
-            'Metrics_train': metrics_train
+            'Metrics_train': metrics_train,
+            'Best hyperparameters': model.best_params_
     }
     
     print('End results', results)
