@@ -111,8 +111,6 @@ def calc_all(model, test):
 
     preds = model.predict(test.x)
     pred_labels = (preds > threshold).astype(int)
-    print('Preds', pred_labels)
-    print('True labels', true_labels)
     accuracy = accuracy_score(true_labels, pred_labels)
     cm = confusion_matrix(true_labels, pred_labels)
     cm_norm = confusion_matrix(true_labels, pred_labels, normalize='all')
