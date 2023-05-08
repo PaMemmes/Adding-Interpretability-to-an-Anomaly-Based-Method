@@ -26,7 +26,7 @@ if __name__ =='__main__':
             model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=args.trials, save='train_w_frags_xg')
             interpret_tree(model, data, save='train_w_frags_xg')
         else:
-            data.preprocess(filename=FILENAME)
+            data.preprocess(filename=FILENAME, kind=None, frags=False)
             model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=args.trials, save='train_wo_frags_xg')
             interpret_tree(model, data, save='train_wo_frags_xg')
     elif args.file == 'combined':
@@ -51,8 +51,8 @@ if __name__ =='__main__':
     elif args.file == 'wgan' or args.file == 'gan':
         if args.frag_data =='Y':
             data.preprocess(filename=FILENAME, kind='normal', frags=True, add=None)
-            train(args.file, data, args.trials, args.retraining, args.epochs, save='train_w_frags_' + args.file)
+            train(model_name=args.file, train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=args.trials, num_retraining=args.retraining, epochs=args.epochs, save='train_w_frags_' + args.file)
         else:
             data.preprocess(filename=FILENAME, kind='normal',frags=False, add=None)
-            train(args.file, data, args.trials, args.retraining, args.epochs, save='train_wo_frags_' + args.file)
+            train(model_name=args.file, train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=args.trials, num_retraining=args.retraining, epochs=args.epochs, save='train_wo_frags_' + args.file)
 

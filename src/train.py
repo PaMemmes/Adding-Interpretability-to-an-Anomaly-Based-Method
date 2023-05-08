@@ -15,13 +15,13 @@ from utils.plots import plot_confusion_matrix, plot_roc, plot_precision_recall
 FILENAME = '../data/preprocessed_data.pickle'
 
 
-def train(model_name, train, test, frags=None, num_trials=1, num_retraining=1, epochs=1, save=False):
+def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epochs=1, save=False):
     experiment = '../experiments/' + save + '/all/experiment'
     Path('../experiments/' + save + '/best/').mkdir(parents=True, exist_ok=True)
 
     config = open_config(model_name)
 
-    best_hp = hyperopt(model_name, config, train, test, num_trials)
+    best_hp = hyperopt(model_name, config, train, test, trials)
 
     num_features = train.x.shape[1]
 
@@ -48,6 +48,7 @@ def train(model_name, train, test, frags=None, num_trials=1, num_retraining=1, e
         plot_confusion_matrix(cm_norm, name + '/cm_normalized.pdf', save)
         plot_roc(metrics['TPR'], metrics['FPR'], metrics['AUC'], name + '/roc.pdf', save)
         #plot_precision_recall(test.y, probas, name + '/precision_recall.pdf')
+        
         results = {
                 'Anomalies percentage': anomalies_percentage,
                 'Cutoff': per,
@@ -69,6 +70,7 @@ def train(model_name, train, test, frags=None, num_trials=1, num_retraining=1, e
             plot_confusion_matrix(cm_norm_frag, name + '/cm_frag_normalized.pdf', save)
             plot_roc(metrics_frag['TPR'], metrics_frag['FPR'], metrics_frag['AUC'], name + '/frag_roc.pdf', save)
             #plot_precision_recall(frags.y, probas, name + '/frag_precision_recall.pdf')
+            
             results = {
                     'Anomalies percentage': anomalies_percentage,
                     'Cutoff': per,
