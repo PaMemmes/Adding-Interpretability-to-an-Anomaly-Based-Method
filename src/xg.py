@@ -82,9 +82,9 @@ def xg_main(train, test, frags, trials, save='xg'):
 
     
     results = {
-            'Metrics': metrics,
+            'Metrics train': metrics_train,
+            'Metrics test': metrics,
             'Metrics frag': metrics_frag,
-            'Metrics_train': metrics_train,
             'Best hyperparameters': model.best_params_
     }
     

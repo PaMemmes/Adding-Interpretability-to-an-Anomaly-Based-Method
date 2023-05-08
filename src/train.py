@@ -56,7 +56,7 @@ def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epoch
                 'Mean Score for normal packets': results_df.loc[results_df['y_test'] == 0, 'results'].mean(),
                 'Mean Score for anomalous packets': results_df.loc[results_df['y_test'] == 1, 'results'].mean(),
                 'Best HP': best_hp['Dropout'],
-                'Metrics': metrics,
+                'Metrics test': metrics,
                 'I':i
         }
 
@@ -79,7 +79,7 @@ def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epoch
                     'Mean Score for normal packets': results_df.loc[results_df['y_test'] == 0, 'results'].mean(),
                     'Mean Score for anomalous packets': results_df.loc[results_df['y_test'] == 1, 'results'].mean(),
                     'Best HP': best_hp['Dropout'],
-                    'Metrics': metrics,
+                    'Metrics test': metrics,
                     'Metrics frag': metrics_frag,
                     'I':i
             }

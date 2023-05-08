@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 import numpy as np
-from src.utils.utils import remove_infs, encode, subset, make_labels_binary, scale
+from src.utils.utils import remove_infs, encode, subset, make_labels_binary
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
