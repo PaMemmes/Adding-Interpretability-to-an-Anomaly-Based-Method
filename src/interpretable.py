@@ -14,8 +14,10 @@ FILENAME = 'Friday-02-03-2018_TrafficForML_CICFlowMeter.csv'
 from utils.utils import read_csv
 
 def make_interpret_plots(explainer, shap_values, test_x, df_cols, name):
-
-    f = shap.force_plot(explainer.expected_value, shap_values[:1000,:], test_x[:1000,:], feature_names=df_cols, show=False)
+    if len(shap_values) > 1000:
+        shap_values = shap_values[:1000, :]
+        test_x = test_x[:1000,:]
+    f = shap.force_plot(explainer.expected_value, shap_values, test_x, feature_names=df_cols, show=False)
     shap.save_html(name + 'force_plot.htm', f)
     plt.close()
 
@@ -38,7 +40,6 @@ def interpret_tree(model, data, save):
     test_df = pd.DataFrame(data.test_sqc.x, columns=df_cols)
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(test_df)
-
     make_interpret_plots(explainer, shap_values, data.test_sqc.x, df_cols, name)
 
     test_df = pd.DataFrame(data.test_frag_sqc.x, columns=df_cols)
