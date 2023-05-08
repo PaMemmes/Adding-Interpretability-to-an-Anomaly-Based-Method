@@ -17,15 +17,13 @@ BATCH_SIZE = 256
 @dataclass
 class DataFrame:
     filename: str = None
-    train_sqc: Any = None
-    test_sqc: Any = None
-    train_frag_sqc: Any = None
-    test_frag_sqc: Any = None
 
     df: pd.DataFrame() = None
     df_frag: pd.DataFrame() = None
     df_add: pd.DataFrame() = None
+
     df_cols: object = None
+
     le: LabelEncoder() = None
 
     x_test: object = None
@@ -33,6 +31,11 @@ class DataFrame:
 
     x_test_frags: object = None
     y_test_frags: object = None
+
+    train_sqc: Any = None
+    test_sqc: Any = None
+
+    test_frag_sqc: Any = None
 
     dfs: defaultdict() = None
     seperate_tests: defaultdict() = None
@@ -49,7 +52,7 @@ class DataFrame:
         self.df = self.df.drop('Timestamp', axis=1)
         self.df_cols = self.df.columns
 
-    def create_labels(self):
+    def create_label_encoder(self):
         # Auxilliary df for LabelEncoder() to encode the right number of labels
         df_exe = pd.read_csv('../data/csv_fragmentedV3/All.ElectroRAT.pcap_Flow.csv')
         df_exe = df_exe.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
@@ -83,6 +86,9 @@ class DataFrame:
         labels = make_labels_binary(self.le, labels)
 
         _, self.x_test_frags, _, self.y_test_frags = train_test_split(df, labels, test_size=test_size, shuffle=False)
+        
+        print('Length of frags test: ', len(self.x_test_frags))
+        print('Length of normal test_data', len(self.x_test))
 
     def preprocess_add(self, add_data):
         x = np.array(add_data)
@@ -91,43 +97,11 @@ class DataFrame:
         data = np.concatenate((x,y), axis=1)
         self.df_add = pd.DataFrame(data, columns=self.df_cols)
     
-    def seperate_dfs(self, filename, test_size=0.15):
-        if filename is not None:
-            df_all = pd.read_csv('../data/cicids2018/' + filename)
-        else:
-            all_files = glob.glob(os.path.join('../data/cicids2018', "*.csv"))
-            df_all = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
-
-        _df = df_all.copy()
-        _df = _df.drop('Timestamp', axis=1)
-        _df, _labels = remove_infs(_df)
-        _, _x_test, _, _ = train_test_split(_df, _labels, test_size=1, shuffle=False)
-        scaler = MinMaxScaler()
-        scaler.fit(_x_test)
-
-
-        dfs = defaultdict()
-        self.seperate_tests = defaultdict()
-        for col in df_all['Label'].unique():
-            dfs[col] = df_all[df_all['Label'] == col]
-            df = dfs[col].sample(frac=1)
-            df = df[:50000]
-            df = df.drop('Timestamp', axis=1)
-            df, labels = remove_infs(df)
-            labels = encode(self.le, labels)
-            x_train, x_test, _, y_test = train_test_split(df, labels, test_size=1, shuffle=False)
-            
-            x_train = scaler.transform(x_train)
-            self.x_test = scaler.transform(self.x_test)
-
-            test_sqc = DataSequence(x_test, y_test, batch_size=BATCH_SIZE)
-            self.seperate_tests[col] = test_sqc
-    
     def preprocess(self, filename = None, kind=None, frags=False, add=None, test_size=0.15):
         self.create_df(filename)
-        self.create_labels()
+        self.create_label_encoder()
         self.create_oos_test(test_size)
-        self.make_frags(test_size)
+        self.make_frags(test_size=test_size)
         if frags is True:
             self.df = pd.concat([self.df_frag.iloc[int((1-test_size)*len(self.df_frag)):], self.df], ignore_index=True)
         if add is not None:
@@ -148,13 +122,19 @@ class DataFrame:
 
         x_train = scaler.fit_transform(x_train)
         self.x_test = scaler.transform(self.x_test)
-
+        self.x_test_frags = scaler.transform(self.x_test_frags)
+        
         self.train_sqc = DataSequence(x_train, y_train, batch_size=BATCH_SIZE)
         self.test_sqc = DataSequence(self.x_test, self.y_test, batch_size=BATCH_SIZE)
 
-    def create_df_only_normal(self):
-        df_all = pd.read_csv('../data/cicids2018/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv')
+        self.test_frag_sqc = DataSequence(self.x_test_frags, self.y_test_frags, batch_size=BATCH_SIZE)
         
+    def create_df_only_normal(self, filename):
+        if filename is not None:
+            df_all = pd.read_csv('../data/cicids2018/' + filename)
+        else:
+            all_files = glob.glob(os.path.join('../data/cicids2018', "*.csv"))
+            df_all = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
         dfs = defaultdict()
         self.seperate_tests = defaultdict()
         for col in df_all['Label'].unique():
@@ -165,41 +145,69 @@ class DataFrame:
         self.df = self.df.drop('Timestamp', axis=1)
         self.df_cols = self.df.columns
     
-    
-    def preprocess_anomalies_only_frags(self, filename = None, kind=None, frags=False, add=None, test_size=0.15):
-        self.create_df_only_normal()
-        self.create_labels()
-        self.create_oos_test(test_size)
-        self.make_frags(test_size)
-        print('LEN DF', len(self.df))
-        self.df = pd.concat([self.df_frag.iloc[int((1-test_size)*len(self.df_frag)):], self.df], ignore_index=True)
         
-        print('LEN DF after concat', len(self.df))
-        if add is not None:
-            self.df = pd.concat([self.df_add, self.df], ignore_index=True)
-        self.df = self.df.sample(frac=1)
-        df, labels = remove_infs(self.df)
-        labels = encode(self.le, labels)
-        labels = make_labels_binary(self.le, labels)
-        x_train, _, y_train, _ = train_test_split(df, labels, test_size=test_size, shuffle=False)
-        
+    def seperate_dfs(self, filename, test_size=0.15):
+        if filename is not None:
+            df_all = pd.read_csv('../data/cicids2018/' + filename)
+        else:
+            all_files = glob.glob(os.path.join('../data/cicids2018', "*.csv"))
+            df_all = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
 
-        # Subsetting only Normal Network packets in training set
-        if kind == 'normal':
-            x_train, y_train = subset(x_train, y_train, 0)
-        elif kind == 'anomaly':
-            x_train, y_train = subset(x_train, y_train, 1)
-            print('Using only anomaly data')
-
+        _df = df_all.copy()
+        _df = _df.drop('Timestamp', axis=1)
+        _df, _labels = remove_infs(_df)
+        _, _x_test, _, _ = train_test_split(_df, _labels, test_size=1, shuffle=False)
         scaler = MinMaxScaler()
+        scaler.fit(_x_test)
 
-        x_train = scaler.fit_transform(x_train)
-        self.x_test = scaler.transform(self.x_test)
+        dfs = defaultdict()
+        self.seperate_tests = defaultdict()
+        for col in df_all['Label'].unique():
+            dfs[col] = df_all[df_all['Label'] == col]
+            df = dfs[col].sample(frac=1)
+            df = df[:50000]
+            df = df.drop('Timestamp', axis=1)
+            df, labels = remove_infs(df)
+            labels = encode(self.le, labels)
+            x_train, x_test, _, y_test = train_test_split(df, labels, test_size=1, shuffle=False)
+            
+            self.x_test = scaler.transform(self.x_test)
 
-        self.x_test_frags = scaler.transform(self.x_test_frags)
+            test_sqc = DataSequence(self.x_test, y_test, batch_size=BATCH_SIZE)
+            self.seperate_tests[col] = test_sqc
+
+    # def preprocess_anomalies_only_frags(self, filename = None, kind=None, frags=False, add=None, test_size=0.15):
+    #     self.create_df_only_normal(filename)
+    #     self.create_label_encoder()
+    #     self.create_oos_test(test_size)
+    #     self.make_frags(test_size)
+    #     print('LEN DF', len(self.df))
+    #     self.df = pd.concat([self.df_frag.iloc[int((1-test_size)*len(self.df_frag)):], self.df], ignore_index=True)
         
-        self.train_sqc = DataSequence(x_train, y_train, batch_size=BATCH_SIZE)
-        self.test_sqc = DataSequence(self.x_test, self.y_test, batch_size=BATCH_SIZE)
+    #     print('LEN DF after concat', len(self.df))
+    #     if add is not None:
+    #         self.df = pd.concat([self.df_add, self.df], ignore_index=True)
+    #     self.df = self.df.sample(frac=1)
+    #     df, labels = remove_infs(self.df)
+    #     labels = encode(self.le, labels)
+    #     labels = make_labels_binary(self.le, labels)
+    #     x_train, _, y_train, _ = train_test_split(df, labels, test_size=test_size, shuffle=False)
+
+    #     # Subsetting only Normal Network packets in training set
+    #     if kind == 'normal':
+    #         x_train, y_train = subset(x_train, y_train, 0)
+    #     elif kind == 'anomaly':
+    #         x_train, y_train = subset(x_train, y_train, 1)
+    #         print('Using only anomaly data')
+
+    #     scaler = MinMaxScaler()
+
+    #     x_train = scaler.fit_transform(x_train)
+    #     self.x_test = scaler.transform(self.x_test)
+
+    #     self.x_test_frags = scaler.transform(self.x_test_frags)
         
-        self.test_frag_sqc = DataSequence(self.x_test_frags, self.y_test_frags, batch_size=BATCH_SIZE)
+    #     self.train_sqc = DataSequence(x_train, y_train, batch_size=BATCH_SIZE)
+    #     self.test_sqc = DataSequence(self.x_test, self.y_test, batch_size=BATCH_SIZE)
         
+    #     self.test_frag_sqc = DataSequence(self.x_test_frags, self.y_test_frags, batch_size=BATCH_SIZE)
