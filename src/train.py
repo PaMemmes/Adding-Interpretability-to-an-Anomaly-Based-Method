@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.metrics import roc_curve, auc, precision_recall_fscore_support, confusion_matrix, accuracy_score
 
 from hyperopt import hyperopt
-from utils.utils import test_model, calc_metrics, calc_all_nn, get_preds, open_config
+from utils.utils import test_model, calc_metrics, calc_all_nn, get_preds, open_config, NumpyEncoder
 from utils.wasserstein import HyperWGAN
 from utils.gan import HyperGAN
 from utils.plots import plot_confusion_matrix, plot_roc, plot_precision_recall
@@ -26,6 +26,7 @@ def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epoch
     num_features = train.x.shape[1]
 
     saves = []
+    all_preds = []
     models = []
     for i in range(num_retraining):
         print('Starting experiment:', i)
@@ -42,13 +43,13 @@ def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epoch
         models.append(hypermodel)
 
         results_df, results = test_model(hypermodel, test)
-        y_pred, probas, per, anomalies_percentage = get_preds(results, train)
+        y_pred, probas, per, anomalies_percentage = get_preds(results, test)
         metrics, cm, cm_norm = calc_all_nn(test, y_pred, probas)
         plot_confusion_matrix(cm, name + '/cm.pdf', save)
         plot_confusion_matrix(cm_norm, name + '/cm_normalized.pdf', save)
         plot_roc(metrics['TPR'], metrics['FPR'], metrics['AUC'], name + '/roc.pdf', save)
         #plot_precision_recall(test.y, probas, name + '/precision_recall.pdf')
-        
+
         results = {
                 'Anomalies percentage': anomalies_percentage,
                 'Cutoff': per,
@@ -59,10 +60,14 @@ def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epoch
                 'Metrics test': metrics,
                 'I':i
         }
-
+        preds = {
+            'Preds':y_pred,
+            'Y_true': test.y.astype(int),
+            'CM': cm
+        }
         if frags is not None:
             results_df_frag, results_frag = test_model(model, frags)
-            y_pred_frag, probas_frag, per_frag, anomalies_percentage_frag = get_preds(results_frag, train)
+            y_pred_frag, probas_frag, _, _ = get_preds(results_frag, train)
             
             metrics_frag, cm_frag, cm_norm_frag = calc_all_nn(frags, y_pred_frag, probas_frag)
 
@@ -83,12 +88,23 @@ def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epoch
                     'Metrics frag': metrics_frag,
                     'I':i
             }
+            preds = {
+                'Preds':y_pred,
+                'Preds frag':y_pred_frag,
+                'Y_true': test.y.astype(int),
+                'Y_true frag': frags.y.astype(int),
+                'CM': cm,
+                'CM frag': cm_frag
+            }
         with open(name + '/' + save + '.json', 'w', encoding='utf-8') as f: 
             json.dump(results, f, ensure_ascii=False, indent=4)
         saves.append(results)
-    
+        all_preds.append(preds)
+
     best_res = sorted(saves, key=lambda d: d['Accuracy'])[-1]
+    numpy_preds = all_preds[best_res['I']]
     print('Best result: ', best_res)
+
     shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/cm.pdf', '../experiments/' + save + '/best/cm.pdf')
     shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/cm_normalized.pdf', '../experiments/' + save + '/best/cm_normalized.pdf')
     shutil.copy(experiment + str(best_res['I']) + '_tuner' + '/roc.pdf', '../experiments/' + save + '/best/roc.pdf')
@@ -102,6 +118,9 @@ def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epoch
 
 
     if save is not False:
+        dumped = json.dumps(numpy_preds, cls=NumpyEncoder)
         with open('../experiments/' + save + '/best/best_model_wgan.json', 'w', encoding='utf-8') as f: 
             json.dump(best_res, f, ensure_ascii=False, indent=4)
+        with open('../experiments/' + save + '/best/best_model_preds.json', 'w', encoding='utf-8') as f: 
+            json.dump(dumped, f)
     return models[best_res['I']]
