@@ -69,6 +69,7 @@ class DataFrame:
         labels = encode(self.le, labels)
         labels = make_labels_binary(self.le, labels)
         _, self.x_test, _, self.y_test = train_test_split(df, labels, test_size=test_size, shuffle=False)
+        self.df = self.df[:int((1-test_size)*len(self.df))]
 
     def make_frags(self, test_size):
         all_files = glob.glob(os.path.join('../data/csv_fragmentedV3', "*.csv"))
@@ -106,6 +107,7 @@ class DataFrame:
             self.df = pd.concat([self.df_frag.iloc[int((1-test_size)*len(self.df_frag)):], self.df], ignore_index=True)
         if add is not None:
             self.df = pd.concat([self.df_add, self.df], ignore_index=True)
+            self.df = self.df.sample(frac=1)
         df, labels = remove_infs(self.df)
         labels = encode(self.le, labels)
         labels = make_labels_binary(self.le, labels)
