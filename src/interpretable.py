@@ -3,6 +3,7 @@ import xgboost as xgb
 import pickle
 import matplotlib.pyplot as plt
 import numpy as np
+import json
 
 import pandas as pd
 from collections import defaultdict
@@ -11,7 +12,7 @@ from preprocess import DataFrame
 
 FILENAME = 'Friday-02-03-2018_TrafficForML_CICFlowMeter.csv'
 
-from utils.utils import read_csv
+from utils.utils import read_csv, NumpyEncoder
 
 def make_interpret_plots(explainer, shap_values, test_x, df_cols, name):
     if len(shap_values) > 1000:
@@ -30,6 +31,16 @@ def make_interpret_plots(explainer, shap_values, test_x, df_cols, name):
     f = plt.gcf()
     f.savefig(name + 'summary.pdf', bbox_inches='tight', dpi=300)
     plt.close()
+
+    shapleys = {
+            'Expected_value': explainer.expected_value,
+            'Shapleys': shap_values,
+            'text_x': test_x
+
+    }
+    dumped = json.dumps(shapleys, cls=NumpyEncoder)
+    with open(name + 'shapley.json', 'w', encoding='utf-8') as f: 
+        json.dump(dumped, f)
 
 def interpret_tree(model, data, save):
     name = '../experiments/' + save + '/best/'
