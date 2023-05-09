@@ -16,7 +16,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import RandomizedSearchCV
 
-from utils.utils import calc_all
+from utils.utils import calc_all, NumpyEncoder
 from utils.plots import plot_confusion_matrix
 import matplotlib.pyplot as plt
 import pickle
@@ -64,20 +64,20 @@ def xg_main(train, test, frags, trials, save='xg'):
     plot_confusion_matrix(cm_train, savefile=name + save + '_cm_train.pdf', name=save)
     plot_confusion_matrix(cm_norm_train, savefile=name + save + '_cm_normalized_train.pdf', name=save)
     plot_roc(metrics_train['TPR'], metrics_train['FPR'], metrics_train['AUC'], name + save + '_roc_train.pdf', name=save)
-    preds_train = np.vstack((1-preds_train, preds_train)).T
+    #preds_train = np.vstack((1-preds_train, preds_train)).T
 
     metrics, cm, cm_norm, preds = calc_all(model, test)
     plot_confusion_matrix(cm, savefile=name + save + '_cm.pdf', name=save)
     plot_confusion_matrix(cm_norm, savefile=name + save + '_cm_normalized.pdf', name=save)
     plot_roc(metrics['TPR'], metrics['FPR'], metrics['AUC'], name + save + '_roc.pdf', name=save)
-    preds = np.vstack((1-preds, preds)).T
+    #preds = np.vstack((1-preds, preds)).T
     # plot_precision_recall(test.y, preds, name + save + '_precision_recall.pdf')
     
     metrics_frag, cm_frag, cm_frag_norm, preds_frag = calc_all(model, frags)
     plot_confusion_matrix(cm_frag, savefile=name + save + '_frags_cm.pdf', name=save)
     plot_confusion_matrix(cm_frag_norm, savefile=name + save + '_frags_cm_normalized.pdf', name=save)
     plot_roc(metrics_frag['TPR'], metrics_frag['FPR'], metrics_frag['AUC'], name + save + '_frags_roc.pdf', name=save)
-    preds_frag = np.vstack((1-preds_frag, preds_frag)).T
+    #preds_frag = np.vstack((1-preds_frag, preds_frag)).T
     #plot_precision_recall(frags.y, preds_frag, name + save + '_frags_precision_recall.pdf')
 
     
@@ -88,9 +88,28 @@ def xg_main(train, test, frags, trials, save='xg'):
             'Best hyperparameters': model.best_params_
     }
     
+    numpy_preds = {
+            'Preds test': preds,
+            'Y_true test': test.y.astype(int),
+            'CM test': cm,
+            'CM test norm': cm_norm,
+
+            'Preds frags test': preds_frag,
+            'Y_true frag': frags.y.astype(int),
+            'CM frag': cm_frag,
+            'CM frag norm': cm_frag_norm,
+
+            'Preds train': preds_train,
+            'Y_true train': train.y.astype(int),
+            'CM train': cm_train,
+            'CM frag train': cm_norm_train,
+    }
     print('End results', results)
+    dumped = json.dumps(numpy_preds, cls=NumpyEncoder)
     with open('../experiments/' + save + '/best/' + save + '_best_model.json', 'w', encoding='utf-8') as f: 
         json.dump(results, f, ensure_ascii=False, indent=4)
-
+    with open('../experiments/' + save + '/best/' + save + '_best_model_preds.json', 'w', encoding='utf-8') as f: 
+        json.dump(dumped, f)
+    
     model.best_estimator_.save_model('models/' + save + '.model')
     return model.best_estimator_
