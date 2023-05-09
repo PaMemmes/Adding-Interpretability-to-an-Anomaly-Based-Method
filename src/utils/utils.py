@@ -14,7 +14,11 @@ import tensorflow as tf
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, np.ndarray):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
 
@@ -93,10 +97,10 @@ def open_config(model_name):
         config = json.loads(f.read())
     return config
 
-def get_preds(results, train):
+def get_preds(results, test):
 
-    normals = collections.Counter(train.y)[0]
-    anomalies = collections.Counter(train.y)[1]
+    normals = collections.Counter(test.y)[0]
+    anomalies = collections.Counter(test.y)[1]
     anomalies_percentage = anomalies / (normals + anomalies)
     
     # Obtaining the lowest "anomalies_percentage" score
