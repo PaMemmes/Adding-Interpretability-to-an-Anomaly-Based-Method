@@ -45,9 +45,9 @@ def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epoch
         results_df, results = test_model(hypermodel, test)
         y_pred, probas, per, anomalies_percentage = get_preds(results, train)
         metrics, cm, cm_norm = calc_all_nn(test, y_pred, probas)
-        plot_confusion_matrix(cm, name + '/cm.pdf', save)
-        plot_confusion_matrix(cm_norm, name + '/cm_normalized.pdf', save)
-        plot_roc(metrics['TPR'], metrics['FPR'], metrics['AUC'], name + '/roc.pdf', save)
+        plot_confusion_matrix(cm, name + '/cm.pdf', model_name)
+        plot_confusion_matrix(cm_norm, name + '/cm_normalized.pdf', model_name)
+        plot_roc(metrics['TPR'], metrics['FPR'], metrics['AUC'], name + '/roc.pdf', model_name)
         #plot_precision_recall(test.y, probas, name + '/precision_recall.pdf')
 
         results = {
@@ -71,9 +71,9 @@ def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epoch
             
             metrics_frag, cm_frag, cm_norm_frag = calc_all_nn(frags, y_pred_frag, probas_frag)
 
-            plot_confusion_matrix(cm_frag, name + '/cm_frag.pdf', save)
-            plot_confusion_matrix(cm_norm_frag, name + '/cm_frag_normalized.pdf', save)
-            plot_roc(metrics_frag['TPR'], metrics_frag['FPR'], metrics_frag['AUC'], name + '/frag_roc.pdf', save)
+            plot_confusion_matrix(cm_frag, name + '/cm_frag.pdf', model_name)
+            plot_confusion_matrix(cm_norm_frag, name + '/cm_frag_normalized.pdf', model_name)
+            plot_roc(metrics_frag['TPR'], metrics_frag['FPR'], metrics_frag['AUC'], name + '/frag_roc.pdf', model_name)
             #plot_precision_recall(frags.y, probas, name + '/frag_precision_recall.pdf')
             
             results = {
