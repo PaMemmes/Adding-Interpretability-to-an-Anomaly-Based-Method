@@ -97,10 +97,10 @@ def open_config(model_name):
         config = json.loads(f.read())
     return config
 
-def get_preds(results, test):
+def get_preds(results, train):
 
-    normals = collections.Counter(test.y)[0]
-    anomalies = collections.Counter(test.y)[1]
+    normals = collections.Counter(train.y)[0]
+    anomalies = collections.Counter(train.y)[1]
     anomalies_percentage = anomalies / (normals + anomalies)
     
     # Obtaining the lowest "anomalies_percentage" score

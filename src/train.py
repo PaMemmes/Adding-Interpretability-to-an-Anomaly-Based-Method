@@ -43,7 +43,7 @@ def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epoch
         models.append(hypermodel)
 
         results_df, results = test_model(hypermodel, test)
-        y_pred, probas, per, anomalies_percentage = get_preds(results, test)
+        y_pred, probas, per, anomalies_percentage = get_preds(results, train)
         metrics, cm, cm_norm = calc_all_nn(test, y_pred, probas)
         plot_confusion_matrix(cm, name + '/cm.pdf', save)
         plot_confusion_matrix(cm_norm, name + '/cm_normalized.pdf', save)

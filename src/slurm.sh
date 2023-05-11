@@ -7,9 +7,9 @@
 
 source /usr/local/Miniconda3-py39_4.10.3-Linux-x86_64/etc/profile.d/conda.sh
 
-conda create --name cnn
-conda activate cnn
+conda create --name gan
+conda activate gan
 
-python cnn.py
+python main.py xg Y 1 1 1
 
-conda env remove -n cnn
+conda env remove -n gan
