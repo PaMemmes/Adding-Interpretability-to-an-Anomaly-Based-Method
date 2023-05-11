@@ -33,9 +33,9 @@ def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epoch
         name = experiment + str(i) + '_tuner'
         Path(name).mkdir(parents=True, exist_ok=True)
         
-        if model_name == 'wgan':
+        if model_name == 'WGAN':
             hypermodel = HyperWGAN(num_features, config, discriminator_extra_steps=3, gp_weight=5.0)
-        elif model_name == 'gan':
+        elif model_name == 'GAN':
             hypermodel = HyperGAN(num_features, config)
         model = hypermodel.build(best_hp)
 
