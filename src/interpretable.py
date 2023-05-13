@@ -10,8 +10,6 @@ from collections import defaultdict
 
 from preprocess import DataFrame
 
-FILENAME = 'Friday-02-03-2018_TrafficForML_CICFlowMeter.csv'
-
 from utils.utils import read_csv, NumpyEncoder
 
 def make_interpret_plots(explainer, shap_values, test_x, df_cols, name):
@@ -59,7 +57,7 @@ def interpret_tree(model, data, save):
     make_interpret_plots(explainer, shap_values, data.test_frag_sqc.x, df_cols, name_frags)
 
 
-    data.seperate_dfs(FILENAME)
+    data.seperate_dfs()
 
     for label, test_sqc in data.seperate_tests.items():
         name = '../experiments/' + save + '/best/' + label + '_'

@@ -7,7 +7,6 @@ import tensorflow as tf
 import collections
 from math import floor
 BATCH_SIZE = 256
-FILENAME = 'Friday-02-03-2018_TrafficForML_CICFlowMeter.csv'
 # python3 main.py combined Y 1 1 1
 
 def run_xg(trials, frags=True):
@@ -16,7 +15,7 @@ def run_xg(trials, frags=True):
     else:
         name = ''
     data = DataFrame()
-    data.preprocess(filename=FILENAME, kind=None, frags=name)
+    data.preprocess(filename=None, kind=None, frags=name)
     model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=trials, save='train_xg' + name)
     interpret_tree(model, data, save='train_xg' + name)
 
@@ -26,7 +25,7 @@ def run_nn(model_name, epochs, retrain, trials, frags=True):
     else:
         name = ''
     data = DataFrame()
-    data.preprocess(filename=FILENAME, kind='normal', frags=frags, add=None)
+    data.preprocess(filename=None, kind='normal', frags=frags, add=None)
     train(model_name=model_name, data=data, frags=data.test_frag_sqc, trials=trials, num_retraining=retrain, epochs=args.epochs, save='train_' + model_name + '_' + name)
 
 def run_combined(epochs, retrain, trials, frags=True):
@@ -35,7 +34,7 @@ def run_combined(epochs, retrain, trials, frags=True):
     else:
         name = ''
     data = DataFrame()
-    data.preprocess(filename=FILENAME, kind='anomaly', frags=False)
+    data.preprocess(filename=None, kind='anomaly', frags=False)
     model = train('WGAN', data=data, frags=None, trials=args.trials, num_retraining=args.retraining, epochs=args.epochs, save='combined_wgan')
     gan_data = []
     for i in range(floor(len(data.train_sqc.x) / BATCH_SIZE / 10)):
@@ -44,7 +43,7 @@ def run_combined(epochs, retrain, trials, frags=True):
         gan_data.append(fake_x)
     print('Additional data: ', len(gan_data) * BATCH_SIZE)
     data = DataFrame()
-    data.preprocess(filename=FILENAME, kind=None, frags=frags, add=gan_data)
+    data.preprocess(filename=None, kind=None, frags=frags, add=gan_data)
     model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=args.trials, save='train_combined' + name)
     interpret_tree(model, data, save='train_combined' + name)
 

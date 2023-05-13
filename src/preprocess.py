@@ -43,7 +43,7 @@ class DataFrame:
 
     def create_df(self, filename):
         if filename is not None:
-            self.df = pd.read_csv('../data/cicids2018/' + filename)
+            self.df = pd.read_csv('/mnt/md0/files_memmesheimer/cicids2018/' + filename)
         else:
             all_files = glob.glob(os.path.join('../data/cicids2018', "*.csv"))
             self.df = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
@@ -55,7 +55,7 @@ class DataFrame:
 
     def create_label_encoder(self):
         # Auxilliary df for LabelEncoder() to encode the right number of labels
-        df_exe = pd.read_csv('../data/csv_fragmentedV3/All.ElectroRAT.pcap_Flow.csv')
+        df_exe = pd.read_csv('/mnt/md0/files_memmesheimer/csv_fragmentedV3/All.ElectroRAT.pcap_Flow.csv')
         df_exe = df_exe.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
         df_exe['Label'] = 'Fragmented Malware'
         df_exe.loc[1, 'Label'] = 'ANOMALY'
@@ -77,7 +77,7 @@ class DataFrame:
         self.anomalies_percentage = anomalies / (normals + anomalies)
 
     def make_frags(self, test_size):
-        all_files = glob.glob(os.path.join('../data/csv_fragmentedV3', "*.csv"))
+        all_files = glob.glob(os.path.join('/mnt/md0/files_memmesheimer/csv_fragmentedV3/', "*.csv"))
         self.df_frag = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
         self.df_frag = self.df_frag.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
         assert len(self.df_frag.columns), len(self.df_cols)
@@ -138,9 +138,9 @@ class DataFrame:
         
     def create_df_only_normal(self, filename):
         if filename is not None:
-            df_all = pd.read_csv('../data/cicids2018/' + filename)
+            df_all = pd.read_csv('/mnt/md0/files_memmesheimer/cicids2018/' + filename)
         else:
-            all_files = glob.glob(os.path.join('../data/cicids2018', "*.csv"))
+            all_files = glob.glob(os.path.join('/mnt/md0/files_memmesheimer/cicids2018', "*.csv"))
             df_all = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
         dfs = defaultdict()
         self.seperate_tests = defaultdict()
@@ -155,9 +155,9 @@ class DataFrame:
         
     def seperate_dfs(self, filename, test_size=0.15):
         if filename is not None:
-            df_all = pd.read_csv('../data/cicids2018/' + filename)
+            df_all = pd.read_csv('/mnt/md0/files_memmesheimer/cicids2018/' + filename)
         else:
-            all_files = glob.glob(os.path.join('../data/cicids2018', "*.csv"))
+            all_files = glob.glob(os.path.join('/mnt/md0/files_memmesheimer/cicids2018', "*.csv"))
             df_all = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
 
         _df = df_all.copy()

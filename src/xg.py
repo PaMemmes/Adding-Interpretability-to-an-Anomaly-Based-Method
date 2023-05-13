@@ -22,8 +22,6 @@ import matplotlib.pyplot as plt
 import pickle
 import scipy.stats as stats
 
-FILENAME = '../data/preprocessed_data.pickle'
-
 def xg_main(train, test, frags, trials, save='xg'):
     name = '../experiments/' + save + '/best/'
     Path(name).mkdir(parents=True, exist_ok=True)
