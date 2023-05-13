@@ -1,7 +1,6 @@
 import json
 import math
 
-import collections
 import pandas as pd
 import numpy as np
 from collections import defaultdict
@@ -97,13 +96,10 @@ def open_config(model_name):
         config = json.loads(f.read())
     return config
 
-def get_preds(results, train):
-
-    normals = collections.Counter(train.y)[0]
-    anomalies = collections.Counter(train.y)[1]
-    anomalies_percentage = anomalies / (normals + anomalies)
+def get_preds(results, train, anomalies_percentage):
     
-    # Obtaining the lowest "anomalies_percentage" score
+    # Get the lowest "anomalies_percentage" score
+    print('Anomalies percentage', anomalies_percentage)
     per = np.percentile(results, anomalies_percentage*100)
     results = np.array(results)
     y_pred = results.copy()
