@@ -15,10 +15,13 @@ from utils.plots import plot_confusion_matrix, plot_roc, plot_precision_recall
 FILENAME = '../data/preprocessed_data.pickle'
 
 
-def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epochs=1, save=False):
+def train(model_name, data, frags=None, trials=1, num_retraining=1, epochs=1, save=False):
     experiment = '../experiments/' + save + '/all/experiment'
     Path('../experiments/' + save + '/best/').mkdir(parents=True, exist_ok=True)
 
+    train, test = data.train_sqc, data.test_sqc
+
+    anomalies_percentage = data.anomalies_percentage
     config = open_config(model_name)
 
     best_hp = hyperopt(model_name, config, train, test, trials)
@@ -43,7 +46,7 @@ def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epoch
         models.append(hypermodel)
 
         results_df, results = test_model(hypermodel, test)
-        y_pred, probas, per, anomalies_percentage = get_preds(results, train)
+        y_pred, probas, per, anomalies_percentage = get_preds(results, train, data.anomalies_percentage)
         metrics, cm, cm_norm = calc_all_nn(test, y_pred, probas)
         plot_confusion_matrix(cm, name + '/cm.pdf', model_name)
         plot_confusion_matrix(cm_norm, name + '/cm_normalized.pdf', model_name)
@@ -67,7 +70,7 @@ def train(model_name, train, test, frags=None, trials=1, num_retraining=1, epoch
         }
         if frags is not None:
             results_df_frag, results_frag = test_model(model, frags)
-            y_pred_frag, probas_frag, _, _ = get_preds(results_frag, train)
+            y_pred_frag, probas_frag, _, _ = get_preds(results_frag, train, anomalies_percentage)
             
             metrics_frag, cm_frag, cm_norm_frag = calc_all_nn(frags, y_pred_frag, probas_frag)
 
