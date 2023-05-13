@@ -10,49 +10,61 @@ BATCH_SIZE = 256
 FILENAME = 'Friday-02-03-2018_TrafficForML_CICFlowMeter.csv'
 # python3 main.py combined Y 1 1 1
 
-if __name__ =='__main__':
+def run_xg(trials, frags=True):
+    if frags == True:
+        name = '_frags'
+    else:
+        name = ''
+    data = DataFrame()
+    data.preprocess(filename=FILENAME, kind=None, frags=name)
+    model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=trials, save='train_xg' + name)
+    interpret_tree(model, data, save='train_xg' + name)
+
+def run_nn(model_name, epochs, retrain, trials, frags=True):
+    if frags == True:
+        name = '_frags'
+    else:
+        name = ''
+    data = DataFrame()
+    data.preprocess(filename=FILENAME, kind='normal', frags=frags, add=None)
+    train(model_name=model_name, data=data, frags=data.test_frag_sqc, trials=trials, num_retraining=retrain, epochs=args.epochs, save='train_' + model_name + '_' + name)
+
+def run_combined(epochs, retrain, trials, frags=True):
+    if frags == True:
+        name = '_frags'
+    else:
+        name = ''
+    data = DataFrame()
+    data.preprocess(filename=FILENAME, kind='anomaly', frags=False)
+    model = train('WGAN', data=data, frags=None, trials=args.trials, num_retraining=args.retraining, epochs=args.epochs, save='combined_wgan')
+    gan_data = []
+    for i in range(floor(len(data.train_sqc.x) / BATCH_SIZE / 10)):
+        noise = tf.random.normal(shape=(BATCH_SIZE, data.train_sqc.x.shape[1]))
+        fake_x = model.generator(noise, training=False)
+        gan_data.append(fake_x)
+    print('Additional data: ', len(gan_data) * BATCH_SIZE)
+    data = DataFrame()
+    data.preprocess(filename=FILENAME, kind=None, frags=frags, add=gan_data)
+    model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=args.trials, save='train_combined' + name)
+    interpret_tree(model, data, save='train_combined' + name)
+
+if __name__ =='__main__':    
+    
     parser = argparse.ArgumentParser('python3 main.py')
-    parser.add_argument('file', help='Model to choose: [XGBoost, WGAN, GAN, WGAN+XGBoost]', type=str)
-    parser.add_argument('frag_data', help='Use fragmented data to train? Y/N', type=str)
     parser.add_argument('trials', help='Number of trials to hyperopt: [0, inf]', type=int)
     parser.add_argument('retraining', help='Number of times the hyperoptimized model should be retrained [0, inf]', type=int)
     parser.add_argument('epochs', help='Number of epochs to train: [0, inf]', type=int)
     args = parser.parse_args()
+    run_nn('WGAN', args.epochs, args.retraining, args.trials, frags=False)
 
-    data = DataFrame()
-    if args.file == 'XGBoost':
-        if args.frag_data == 'Y':
-            data.preprocess(filename=FILENAME, kind=None, frags=True)
-            model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=args.trials, save='train_w_frags_xg')
-            interpret_tree(model, data, save='train_w_frags_xg')
-        else:
-            data.preprocess(filename=FILENAME, kind=None, frags=False)
-            model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=args.trials, save='train_wo_frags_xg')
-            interpret_tree(model, data, save='train_wo_frags_xg')
-    elif args.file == 'WGAN+XGBoost':
-        data.preprocess(filename=FILENAME, kind='anomaly', frags=False)
-        model = train('WGAN', data.train_sqc, data.test_sqc, None, args.trials, args.retraining, args.epochs, save='combined_wgan')
-        gan_data = []
-        for i in range(floor(len(data.train_sqc.x) / BATCH_SIZE / 10)):
-            noise = tf.random.normal(shape=(BATCH_SIZE, data.train_sqc.x.shape[1]))
-            fake_x = model.generator(noise, training=False)
-            gan_data.append(fake_x)
+    run_xg(args.trials, frags=False)
+    run_xg(args.trials, frags=True)
 
-        if args.frag_data =='Y':
-            data.preprocess(filename=FILENAME, kind=None, frags=True, add=gan_data)
-            model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=args.trials, save='train_w_frags_combined')
-            interpret_tree(model, data, save='train_w_frags_combined')
-        else:
-            data.preprocess(filename=FILENAME, kind=None, frags=False, add=gan_data)
-            print('LOOK HERE', data.test_frag_sqc.x.shape)
-            model = xg_main(train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=args.trials, save='train_wo_frags_combined')
-            interpret_tree(model, data, save='train_wo_frags_combined')
+    run_nn('WGAN', args.epochs, args.retraining, args.trials, frags=True)
+    
+    run_nn('GAN', args.epochs, args.retraining, args.trials, frags=False)
+    run_nn('GAN', args.epochs, args.retraining, args.trials, frags=True)
 
-    elif args.file == 'WGAN' or args.file == 'GAN':
-        if args.frag_data =='Y':
-            data.preprocess(filename=FILENAME, kind='normal', frags=True, add=None)
-            train(model_name=args.file, train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=args.trials, num_retraining=args.retraining, epochs=args.epochs, save='train_w_frags_' + args.file)
-        else:
-            data.preprocess(filename=FILENAME, kind='normal',frags=False, add=None)
-            train(model_name=args.file, train=data.train_sqc, test=data.test_sqc, frags=data.test_frag_sqc, trials=args.trials, num_retraining=args.retraining, epochs=args.epochs, save='train_wo_frags_' + args.file)
 
+    run_combined(args.epochs, args.retraining, args.trials, frags=False)
+    run_combined(args.epochs, args.retraining, args.trials, frags=True)
