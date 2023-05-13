@@ -5,6 +5,7 @@ import scikitplot as skplt
 def plot_confusion_matrix(cm, savefile, name, cmap=plt.cm.Greens):
     fig, ax = plt.subplots()
     cm = np.around(cm, decimals=6)
+    plt.figure(figsize=(12,10))
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.colorbar()
     plt.xticks(np.arange(2), ['Normal','Anomaly'], rotation=45)
@@ -20,7 +21,7 @@ def plot_confusion_matrix(cm, savefile, name, cmap=plt.cm.Greens):
                         verticalalignment='center')
     plt.ylabel('True Label')
     plt.xlabel('Predicted Label')
-    plt.savefig(savefile)
+    plt.savefig(savefile, dpi=300, bbox_inches = "tight")
     plt.close('all')
 
 def plot_accuracy(history, savefile, name):
@@ -29,7 +30,7 @@ def plot_accuracy(history, savefile, name):
     plt.legend(['accuracy', 'val_accuracy'])
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy in percent')
-    plt.savefig(savefile)
+    plt.savefig(savefile, dpi=300, bbox_inches = "tight")
     plt.close('all')
     
 def plot_loss(history, savefile, name):
@@ -38,7 +39,7 @@ def plot_loss(history, savefile, name):
     plt.legend(['loss', 'val_loss'])
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.savefig(savefile)
+    plt.savefig(savefile, dpi=300, bbox_inches = "tight")
     plt.close('all')
     
 def plot_roc(tpr, fpr, roc_auc, savefile, name):
@@ -51,7 +52,7 @@ def plot_roc(tpr, fpr, roc_auc, savefile, name):
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.legend(loc="lower right")
-    plt.savefig(savefile)
+    plt.savefig(savefile, dpi=300, bbox_inches = "tight")
     plt.close('all')
 
 def plot_losses(gen_loss, dis_loss, savefile):
@@ -60,7 +61,7 @@ def plot_losses(gen_loss, dis_loss, savefile):
     plt.plot(gen_loss, label='Generator')
     plt.ylabel('Loss')
     plt.legend()
-    plt.savefig(savefile)
+    plt.savefig(savefile, dpi=300, bbox_inches = "tight")
     plt.close('all')
 
 def plot_precision_recall(y_test, y_preds, savefile):
@@ -68,5 +69,5 @@ def plot_precision_recall(y_test, y_preds, savefile):
     print(y_test.shape)
     print(y_preds.shape)
     skplt.metrics.plot_precision_recall(y_test, y_preds)
-    plt.savefig(savefile)
+    plt.savefig(savefile, dpi=300, bbox_inches = "tight")
     plt.close('all')
