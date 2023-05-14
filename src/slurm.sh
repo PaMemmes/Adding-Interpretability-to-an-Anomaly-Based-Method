@@ -7,9 +7,16 @@
 
 source /usr/local/Miniconda3-py39_4.10.3-Linux-x86_64/etc/profile.d/conda.sh
 
-conda create --name gan
-conda activate gan
+conda create --name gan -y
+conda activate gan 
+conda install -c conda-forge keras-tuner -y
+conda install pandas -y
+conda install matplotlib -y
+conda install -c conda-forge scikit-plot -y
+conda install -c conda-forge xgboost -y
+conda install -c conda-forge shap -y
 
-python main.py xg Y 1 1 1
+python main.py Y 1 1 1
 
+conda deactivate
 conda env remove -n gan

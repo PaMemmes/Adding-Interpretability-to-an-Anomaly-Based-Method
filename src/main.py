@@ -54,13 +54,13 @@ if __name__ =='__main__':
     parser.add_argument('retraining', help='Number of times the hyperoptimized model should be retrained [0, inf]', type=int)
     parser.add_argument('epochs', help='Number of epochs to train: [0, inf]', type=int)
     args = parser.parse_args()
-    run_nn('WGAN', args.epochs, args.retraining, args.trials, frags=False)
 
     run_xg(args.trials, frags=False)
     run_xg(args.trials, frags=True)
 
     run_nn('WGAN', args.epochs, args.retraining, args.trials, frags=True)
-    
+    run_nn('WGAN', args.epochs, args.retraining, args.trials, frags=False)
+
     run_nn('GAN', args.epochs, args.retraining, args.trials, frags=False)
     run_nn('GAN', args.epochs, args.retraining, args.trials, frags=True)
 

@@ -11,6 +11,7 @@ from utils.utils import test_model, calc_metrics, calc_all_nn, get_preds, open_c
 from utils.wasserstein import HyperWGAN
 from utils.gan import HyperGAN
 from utils.plots import plot_confusion_matrix, plot_roc, plot_precision_recall
+import tensorflow as tf
 
 FILENAME = '../data/preprocessed_data.pickle'
 
@@ -36,6 +37,8 @@ def train(model_name, data, frags=None, trials=1, num_retraining=1, epochs=1, sa
         name = experiment + str(i) + '_tuner'
         Path(name).mkdir(parents=True, exist_ok=True)
         
+        # mirrored_strategy = tf.distribute.MirroredStrategy()
+        # with mirrored_strategy.scope():
         if model_name == 'WGAN':
             hypermodel = HyperWGAN(num_features, config, discriminator_extra_steps=3, gp_weight=5.0)
         elif model_name == 'GAN':
