@@ -13,9 +13,6 @@ from utils.gan import HyperGAN
 from utils.plots import plot_confusion_matrix, plot_roc, plot_precision_recall
 import tensorflow as tf
 
-FILENAME = '../data/preprocessed_data.pickle'
-
-
 def train(model_name, data, frags=None, trials=1, num_retraining=1, epochs=1, save=False):
     experiment = '../experiments/' + save + '/all/experiment'
     Path('../experiments/' + save + '/best/').mkdir(parents=True, exist_ok=True)
@@ -39,9 +36,9 @@ def train(model_name, data, frags=None, trials=1, num_retraining=1, epochs=1, sa
         
         # mirrored_strategy = tf.distribute.MirroredStrategy()
         # with mirrored_strategy.scope():
-        if model_name == 'WGAN':
+        if model_name == 'wgan':
             hypermodel = HyperWGAN(num_features, config, discriminator_extra_steps=3, gp_weight=5.0)
-        elif model_name == 'GAN':
+        elif model_name == 'gan':
             hypermodel = HyperGAN(num_features, config)
         model = hypermodel.build(best_hp)
 
