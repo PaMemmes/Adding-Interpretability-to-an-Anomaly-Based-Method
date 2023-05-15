@@ -1,27 +1,20 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import scikitplot as skplt
+import seaborn as sns
+import pandas as pd
 
 def plot_confusion_matrix(cm, savefile, name, cmap=plt.cm.Greens):
     fig, ax = plt.subplots()
     cm = np.around(cm, decimals=6)
-    plt.figure(figsize=(12,10))
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    plt.colorbar()
-    plt.xticks(np.arange(2), ['Normal','Anomaly'], rotation=45)
-    plt.yticks(np.arange(2), ['Normal','Anomaly'])
-    plt.tight_layout()
-
-    width, height = cm.shape
-
-    for x in range(width):
-        for y in range(height):
-            plt.annotate(str(cm[x][y]), xy=(y, x), 
-                        horizontalalignment='center',
-                        verticalalignment='center')
+    df_cm = pd.DataFrame(cm, index = [i for i in ['Normal', 'Anomaly']],
+                    columns = [i for i in ['Normal', 'Anomaly']])
+    plt.figure(figsize = (10,7))
+    sns.set(font_scale=1.4)
+    sns.heatmap(df_cm, annot=True, fmt="g", annot_kws={"size": 16})
     plt.ylabel('True Label')
     plt.xlabel('Predicted Label')
-    plt.savefig(savefile, dpi=300, bbox_inches = "tight")
+    plt.savefig(savefile, bbox_inches = "tight")
     plt.close('all')
 
 def plot_accuracy(history, savefile, name):

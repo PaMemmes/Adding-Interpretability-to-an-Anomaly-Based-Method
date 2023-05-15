@@ -59,21 +59,21 @@ def xg_main(train, test, frags, trials, save='xg'):
     print(model.best_params_)
 
     metrics_train, cm_train, cm_norm_train, preds_train = calc_all(model, train)
-    plot_confusion_matrix(cm_train, savefile=name + save + '_cm_train.pdf', name=save)
-    plot_confusion_matrix(cm_norm_train, savefile=name + save + '_cm_normalized_train.pdf', name=save)
+    plot_confusion_matrix(cm_train, savefile=name + 'cm_train.pdf', name=save)
+    plot_confusion_matrix(cm_norm_train, savefile=name + 'cm_normalized_train.pdf', name=save)
     plot_roc(metrics_train['TPR'], metrics_train['FPR'], metrics_train['AUC'], name + save + '_roc_train.pdf', name=save)
     #preds_train = np.vstack((1-preds_train, preds_train)).T
 
     metrics, cm, cm_norm, preds = calc_all(model, test)
-    plot_confusion_matrix(cm, savefile=name + save + '_cm.pdf', name=save)
-    plot_confusion_matrix(cm_norm, savefile=name + save + '_cm_normalized.pdf', name=save)
+    plot_confusion_matrix(cm, savefile=name + 'cm.pdf', name=save)
+    plot_confusion_matrix(cm_norm, savefile=name + 'cm_normalized.pdf', name=save)
     plot_roc(metrics['TPR'], metrics['FPR'], metrics['AUC'], name + save + '_roc.pdf', name=save)
     #preds = np.vstack((1-preds, preds)).T
     # plot_precision_recall(test.y, preds, name + save + '_precision_recall.pdf')
     
     metrics_frag, cm_frag, cm_frag_norm, preds_frag = calc_all(model, frags)
-    plot_confusion_matrix(cm_frag, savefile=name + save + '_frags_cm.pdf', name=save)
-    plot_confusion_matrix(cm_frag_norm, savefile=name + save + '_frags_cm_normalized.pdf', name=save)
+    plot_confusion_matrix(cm_frag, savefile=name + 'cm_frags.pdf', name=save)
+    plot_confusion_matrix(cm_frag_norm, savefile=name + 'cm_frags_normalized.pdf', name=save)
     plot_roc(metrics_frag['TPR'], metrics_frag['FPR'], metrics_frag['AUC'], name + save + '_frags_roc.pdf', name=save)
     #preds_frag = np.vstack((1-preds_frag, preds_frag)).T
     #plot_precision_recall(frags.y, preds_frag, name + save + '_frags_precision_recall.pdf')
