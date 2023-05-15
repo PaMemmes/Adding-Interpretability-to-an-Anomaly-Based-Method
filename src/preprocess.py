@@ -43,10 +43,10 @@ class DataFrame:
 
     def create_df(self, filename):
         if filename is not None:
-            self.df = pd.read_csv('/mnt/md0/files_memmesheimer/cicids2018/' + filename)
+            self.df = pd.read_csv('/mnt/md0/files_memmesheimer/cicids2018/' + filename, engine='python')
         else:
             all_files = glob.glob(os.path.join('/mnt/md0/files_memmesheimer/cicids2018', "*.csv"))
-            self.df = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
+            self.df = pd.concat((pd.read_csv(f, engine='python') for f in all_files), ignore_index=True)
 
         self.df = self.df.sample(frac=1)
         self.df = self.df.drop('Timestamp', axis=1)
@@ -77,7 +77,7 @@ class DataFrame:
 
     def make_frags(self, test_size):
         all_files = glob.glob(os.path.join('/mnt/md0/files_memmesheimer/csv_fragmentedV3/', "*.csv"))
-        self.df_frag = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
+        self.df_frag = pd.concat((pd.read_csv(f, engine='python') for f in all_files), ignore_index=True)
         self.df_frag = self.df_frag.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
         assert len(self.df_frag.columns), len(self.df_cols)
 
@@ -147,17 +147,15 @@ class DataFrame:
             dfs[col] = df_all[df_all['Label'] == col]
         self.df = dfs['Benign']
         
-        self.df = self.df[:50000]
         self.df = self.df.drop('Timestamp', axis=1)
         self.df_cols = self.df.columns
-    
-        
+
     def seperate_dfs(self, filename, test_size=0.15):
         if filename is not None:
-            df_all = pd.read_csv('/mnt/md0/files_memmesheimer/cicids2018/' + filename)
+            df_all = pd.read_csv('/mnt/md0/files_memmesheimer/cicids2018/' + filename, engine='python')
         else:
             all_files = glob.glob(os.path.join('/mnt/md0/files_memmesheimer/cicids2018', "*.csv"))
-            df_all = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
+            df_all = pd.concat((pd.read_csv(f, engine='python') for f in all_files), ignore_index=True)
 
         _df = df_all.copy()
         _df = _df.drop('Timestamp', axis=1)
