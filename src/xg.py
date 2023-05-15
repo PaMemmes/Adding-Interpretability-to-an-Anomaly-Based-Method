@@ -46,7 +46,7 @@ def xg_main(train, test, frags, trials, save='xg'):
         'max_depth': [3, 6, 9],
         'learning_rate': [0.05, 0.1, 0.20],
         'max_leaves': [2**4, 2**6, 2**8],
-        'eta': [x for x in np.linspace(0.1, 0.6, 6)],
+        'eta': list(np.linspace(0.1, 0.6, 6)),
         'gamma': [int(x) for x in np.linspace(0, 0.5, 6)]
     }
 
