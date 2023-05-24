@@ -48,6 +48,7 @@ class DataFrame:
             all_files = glob.glob(os.path.join('/mnt/md0/files_memmesheimer/cicids2018', "*.csv"))
             self.df = pd.concat((pd.read_csv(f, engine='python') for f in all_files), ignore_index=True)
 
+        print('Length of CSE-CICIDS2018 data', len(self.df))
         self.df = self.df.sample(frac=1)
         self.df = self.df.drop('Timestamp', axis=1)
         self.df_cols = self.df.columns
