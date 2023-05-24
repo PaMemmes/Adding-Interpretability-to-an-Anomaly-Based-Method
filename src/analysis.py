@@ -20,8 +20,9 @@ import matplotlib.pyplot as plt
 #     plt.close()
 
 def bar_plot_real(df):
-    df = pd.read_csv('../data/cicids2018/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv')
-    sns.set_style("whitegrid", {'axes.grid' : True})
+    df = pd.read_csv(
+        '../data/cicids2018/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv')
+    sns.set_style("whitegrid", {'axes.grid': True})
     ax = sns.histplot(data=df, x='Label', stat='probability')
     plt.tight_layout()
     ax.set(ylabel='Percent')
@@ -31,7 +32,8 @@ def bar_plot_real(df):
 
 
 if __name__ == '__main__':
-    df = pd.read_csv('../data/cicids2018/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv')
+    df = pd.read_csv(
+        '../data/cicids2018/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv')
     df = df[:50000]
     pd.set_option('display.max_columns', 500)
     print(df.head())
