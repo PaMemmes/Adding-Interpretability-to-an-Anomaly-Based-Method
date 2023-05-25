@@ -12,11 +12,12 @@ conda activate gan
 conda install -c conda-forge keras-tuner -y
 conda install pandas -y
 conda install matplotlib -y
+conda install seaborn -c conda-forge -y
 conda install -c conda-forge scikit-plot -y
 conda install -c conda-forge xgboost -y
 conda install -c conda-forge shap -y
 
-python main.py Y 1 1 1
+python main.py 1 1 1
 
 conda deactivate
 conda env remove -n gan
