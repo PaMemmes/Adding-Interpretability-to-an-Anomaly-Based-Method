@@ -98,10 +98,9 @@ class DataFrame:
         self.df_frag = self.df_frag.drop(
             ['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
         assert len(self.df_frag.columns), len(self.df_cols)
-
         self.df_frag['Label'] = 'Fragmented Malware'
         self.df_frag['Dst Port'] = np.random.randint(
-            0, self.df.max(axis=0)['Dst Port'], size=(len(self.df_frag)))
+            0, 65535, size=(len(self.df_frag)))
 
         df = self.df_frag
         df, labels = remove_infs(df)
@@ -205,7 +204,7 @@ class DataFrame:
         _df = _df.drop('Timestamp', axis=1)
         _df, _labels = remove_infs(_df)
         _, _x_test, _, _ = train_test_split(
-            _df, _labels, test_size=1, shuffle=False)
+            _df, _labels, test_size=1.0, shuffle=False)
         scaler = MinMaxScaler()
         scaler.fit(_x_test)
 
@@ -219,7 +218,7 @@ class DataFrame:
             df, labels = remove_infs(df)
             labels = encode(self.le, labels)
             x_train, x_test, _, y_test = train_test_split(
-                df, labels, test_size=1, shuffle=False)
+                df, labels, test_size=1.0, shuffle=False)
 
             self.x_test = scaler.transform(self.x_test)
 
