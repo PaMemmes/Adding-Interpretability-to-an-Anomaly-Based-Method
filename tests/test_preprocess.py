@@ -22,6 +22,13 @@ def example_xy(example_df):
     x_train, x_test, y_train, y_test = train_test_split(df, labels, test_size=0.2)
     return x_train, y_train
 
+@pytest.fixture
+def example_le(example_df):
+    le = LabelEncoder()
+    le.fit(example_df['Label'])
+    labels = encode(le, example_df['Label'])
+    return le, labels
+
 def test_remove_infs(example_df):
     df, labels = remove_infs(example_df)
     assert df.isnull().sum().sum() == 0
@@ -45,3 +52,11 @@ def test_subset(example_xy):
         assert elem == 0
     for elem in y_1:
         assert elem == 1
+
+def test_make_labels_binary(example_le):
+    le, labels = example_le
+    new_labels = make_labels_binary(le, labels)
+    assert isinstance(new_labels, np.ndarray)
+    assert len(labels) == len(new_labels)
+    for elem in new_labels:
+        assert elem == 0 or elem == 1
