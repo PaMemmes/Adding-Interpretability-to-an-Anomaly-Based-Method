@@ -54,7 +54,6 @@ def make_labels_binary(label_encoder, labels):
     new_labels[labels != normal_data_index] = 1
     new_labels[labels == normal_data_index] = 0
     return new_labels
-
 # Normal is 0, anomaly is 1
 
 
@@ -88,12 +87,11 @@ def reduce_anomalies(df, pct_anomalies=.01):
     return new_df
 
 # Remove infinities and NaNs
-
-
 def remove_infs(df):
     assert isinstance(df, pd.DataFrame)
     labels = df['Label']
     df = df.drop('Label', axis=1)
+    df = df.apply(pd.to_numeric, errors='coerce')
     indices_to_keep = ~df.isin([np.nan, np.inf, -np.inf]).any(axis=1)
     return df[indices_to_keep], labels[indices_to_keep]
 
