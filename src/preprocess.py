@@ -1,18 +1,19 @@
 import pickle
 import collections
+from typing import Any
+from collections import defaultdict
+import glob
+import os
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-import glob
-import os
-from utils.utils import DataSequence
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
-from utils.utils import remove_infs, make_labels_binary, subset, encode
-from dataclasses import dataclass
 
-from typing import Any
-from collections import defaultdict
+from utils.utils import DataSequence
+from utils.utils import remove_infs, make_labels_binary, subset, encode
+
 BATCH_SIZE = 256
 
 
@@ -51,14 +52,14 @@ class DataFrame:
         else:
             all_files = glob.glob(
                 os.path.join(
-                    '/mnt/md0/files_memmesheimer/cicids2018',
+                    '/mnt/md0/files_memmesheimercicids2018',
                     "*.csv"))
             self.df = pd.concat((pd.read_csv(f, engine='python')
                                 for f in all_files), ignore_index=True)
 
         print('Length of CSE-CICIDS2018 data', len(self.df))
         self.df = self.df.sample(frac=1)
-        self.df = self.df.drop('Timestamp', axis=1)
+        self.df = self.df.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
         self.df_cols = self.df.columns
 
     def create_label_encoder(self):
@@ -77,6 +78,7 @@ class DataFrame:
     def create_oos_test(self, test_size):
         # Make-out-of-sample test split, s.t. additional data is not
         # incorporated
+        self.df = self.df.reset_index(drop=True)
         df, labels = remove_infs(self.df)
         labels = encode(self.le, labels)
         labels = make_labels_binary(self.le, labels)
@@ -103,8 +105,9 @@ class DataFrame:
             0, 65535, size=(len(self.df_frag)))
 
         df = self.df_frag
+        print('Length of frags before removing infs', len(df))
         df, labels = remove_infs(df)
-
+        print('Length of frags after removing infs', len(df))
         labels = encode(self.le, labels)
         labels = make_labels_binary(self.le, labels)
 
@@ -112,7 +115,7 @@ class DataFrame:
             df, labels, test_size=test_size, shuffle=False)
 
         print('Length of frags test: ', len(self.x_test_frags))
-        print('Length of normal test_data', len(self.x_test))
+        
 
     def preprocess_add(self, add_data):
         x = np.array(add_data)
@@ -138,7 +141,9 @@ class DataFrame:
         if add is not None:
             self.df = pd.concat([self.df_add, self.df], ignore_index=True)
             self.df = self.df.sample(frac=1)
+        print('Length of df (w/wo frags and add) before removing infs', len(self.df))
         df, labels = remove_infs(self.df)
+        print('Length of df (w/wo frags and add) after removing infs', len(df))
         labels = encode(self.le, labels)
         labels = make_labels_binary(self.le, labels)
         x_train, _, y_train, _ = train_test_split(
@@ -202,27 +207,26 @@ class DataFrame:
 
         _df = df_all.copy()
         _df = _df.drop('Timestamp', axis=1)
+        _df = _df.reset_index(drop=True)
         _df, _labels = remove_infs(_df)
-        _, _x_test, _, _ = train_test_split(
-            _df, _labels, test_size=1.0, shuffle=False)
+        _x_test = _df.to_numpy()
         scaler = MinMaxScaler()
         scaler.fit(_x_test)
-
+        
         dfs = defaultdict()
         self.seperate_tests = defaultdict()
         for col in df_all['Label'].unique():
             dfs[col] = df_all[df_all['Label'] == col]
             df = dfs[col].sample(frac=1)
-            df = df[:50000]
+            if len(df) <= 5:
+                continue
             df = df.drop('Timestamp', axis=1)
-            df, labels = remove_infs(df)
-            labels = encode(self.le, labels)
-            x_train, x_test, _, y_test = train_test_split(
-                df, labels, test_size=1.0, shuffle=False)
+            df, y_test = remove_infs(df)
+            y_test = encode(self.le, y_test)
+            x_test = df.to_numpy()
+            x_test = scaler.transform(x_test)
 
-            self.x_test = scaler.transform(self.x_test)
-
-            test_sqc = DataSequence(self.x_test, y_test, batch_size=BATCH_SIZE)
+            test_sqc = DataSequence(x_test, y_test, batch_size=BATCH_SIZE)
             self.seperate_tests[col] = test_sqc
 
     # def preprocess_anomalies_only_frags(self, filename = None, kind=None, frags=False, add=None, test_size=0.15):
