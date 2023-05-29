@@ -8,6 +8,9 @@ import pandas as pd
 def plot_confusion_matrix(cm, savefile, name, cmap=plt.cm.Greens):
     fig, ax = plt.subplots()
     cm = np.around(cm, decimals=6)
+    print(cm)
+    if len(cm) < 2:
+        cm = np.array([[0, 0], [0,cm[0][0]]])
     df_cm = pd.DataFrame(cm, index=[i for i in ['Normal', 'Anomaly']],
                          columns=[i for i in ['Normal', 'Anomaly']])
     plt.figure(figsize=(10, 7))
