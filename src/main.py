@@ -76,7 +76,6 @@ def run_combined(epochs, retrain, trials, frags=True):
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser('python3 main.py')
     parser.add_argument(
         'trials',
@@ -92,14 +91,23 @@ if __name__ == '__main__':
         type=int)
     args = parser.parse_args()
 
-    run_nn('wgan', args.epochs, args.retraining, args.trials, frags=True)
-    run_nn('wgan', args.epochs, args.retraining, args.trials, frags=False)
 
+    print('Running XG with no frags')
     run_xg(args.trials, frags=False)
+    print('Running XG with frags')
     run_xg(args.trials, frags=True)
 
+    print('Running Combined with no frags')
+    run_combined(args.epochs, args.retraining, args.trials, frags=False)
+    print('Running Combined with frags')
+    run_combined(args.epochs, args.retraining, args.trials, frags=True)
+
+    print('Running Gan with no frags')
     run_nn('gan', args.epochs, args.retraining, args.trials, frags=False)
+    print('Running Gan with frags')
     run_nn('gan', args.epochs, args.retraining, args.trials, frags=True)
 
-    run_combined(args.epochs, args.retraining, args.trials, frags=False)
-    run_combined(args.epochs, args.retraining, args.trials, frags=True)
+    print('Running Wgan with no frags')
+    run_nn('wgan', args.epochs, args.retraining, args.trials, frags=False)
+    print('Running Wgan with frags')
+    run_nn('wgan', args.epochs, args.retraining, args.trials, frags=True)
