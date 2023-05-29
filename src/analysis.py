@@ -20,8 +20,12 @@ import matplotlib.pyplot as plt
 #     plt.close()
 
 def bar_plot_real(df):
-    df = pd.read_csv(
-        '../data/cicids2018/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv')
+    all_files = glob.glob(
+    os.path.join(
+        '../data/cicids2018',
+        "*.csv"))
+    df = pd.concat((pd.read_csv(f, engine='python') for f in all_files), ignore_index=True)
+
     sns.set_style("whitegrid", {'axes.grid': True})
     ax = sns.histplot(data=df, x='Label', stat='probability')
     plt.tight_layout()
