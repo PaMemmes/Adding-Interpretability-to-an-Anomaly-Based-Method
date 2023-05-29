@@ -51,7 +51,7 @@ def run_combined(epochs, retrain, trials, frags=True):
     data = DataFrame()
     data.preprocess(filename=None, kind='anomaly', frags=False)
     model = train(
-        'WGAN',
+        'wgan',
         data=data,
         frags=None,
         trials=args.trials,
