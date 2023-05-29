@@ -136,7 +136,8 @@ class HyperGAN(keras_tuner.HyperModel):
             'relu': layers.ReLU(),
             'tanh': Activation('tanh')
         }
-
+        # mirrored_strategy = tf.distribute.MirroredStrategy()
+        # with mirrored_strategy.scope():
         self.discriminator = self.get_discriminator(drop_rate)
         self.generator = self.get_generator(activation_dict['relu'])
 

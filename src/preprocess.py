@@ -52,7 +52,7 @@ class DataFrame:
         else:
             all_files = glob.glob(
                 os.path.join(
-                    '/mnt/md0/files_memmesheimercicids2018',
+                    '/mnt/md0/files_memmesheimer/cicids2018',
                     "*.csv"))
             self.df = pd.concat((pd.read_csv(f, engine='python')
                                 for f in all_files), ignore_index=True)
