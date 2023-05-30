@@ -27,7 +27,8 @@ def bar_plot_real(df):
     df = pd.concat((pd.read_csv(f, engine='python') for f in all_files), ignore_index=True)
 
     sns.set_style("whitegrid", {'axes.grid': True})
-    ax = sns.histplot(data=df, x='Label', stat='probability')
+    ax = sns.histplot(data=df, x='Label', stat='probability', log_scale=True)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=40, ha="right")
     plt.tight_layout()
     ax.set(ylabel='Percent')
     fig = ax.get_figure()
