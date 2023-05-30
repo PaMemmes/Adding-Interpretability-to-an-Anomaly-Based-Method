@@ -7,7 +7,7 @@ from src.utils.utils import make_labels_binary, subset, save_results
 
 @pytest.fixture
 def example_labels():
-    return np.array(['BENIGN', 'BENIGN', 'BOT', 'DDoS', 'Trojan', 'Worm', 'Scan', 'BENIGN', 'BENIGN', 'Trojan', 'Worm', 'Scan'])
+    return np.array(['Benign', 'Benign', 'BOT', 'DDoS', 'Trojan', 'Worm', 'Scan', 'Benign', 'Benign', 'Trojan', 'Worm', 'Scan'])
 
 @pytest.fixture
 def example_le(example_labels):
@@ -20,7 +20,7 @@ def example_le(example_labels):
 
 @pytest.fixture
 def example_df_labels():
-    return pd.DataFrame({'label': [0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1]})
+    return pd.DataFrame({'Label': [0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1]})
 
 @pytest.fixture
 def example_df():

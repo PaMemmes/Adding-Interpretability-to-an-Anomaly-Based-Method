@@ -3,6 +3,7 @@ from tensorflow.keras.layers import Input, BatchNormalization, LeakyReLU, Dense,
 from tensorflow.keras import initializers
 import tensorflow as tf
 
+
 def get_generator(config, num_features):
     generator = Sequential()
     generator.add(Dense(64, input_dim=num_features,
@@ -17,7 +18,11 @@ def get_generator(config, num_features):
     generator.add(Dense(num_features))
     generator.add(Activation('tanh'))
 
-    optim = getattr(tf.optimizers.legacy, config['optimizer'])(learning_rate=config['learning_rate'], beta_1=config['momentum'])
+    optim = getattr(
+        tf.optimizers.legacy,
+        config['optimizer'])(
+        learning_rate=config['learning_rate'],
+        beta_1=config['momentum'])
     generator.compile(loss=config['loss'], optimizer=optim)
 
     return generator
@@ -30,7 +35,7 @@ def get_discriminator(config, num_features):
     discriminator.add(Dense(256, input_dim=num_features,
                       kernel_initializer=initializers.glorot_normal(seed=32)))
 
-    for  _, layer in config['dis_layers'].items():
+    for _, layer in config['dis_layers'].items():
         discriminator.add(Dense(layer))
         activation = getattr(tf.keras.layers, config['dis_activation'])()
         discriminator.add(activation)
@@ -38,10 +43,15 @@ def get_discriminator(config, num_features):
     discriminator.add(Dense(1))
     discriminator.add(Activation('sigmoid'))
 
-    optim = getattr(tf.optimizers.legacy, config['optimizer'])(learning_rate=config['learning_rate'], beta_1=config['momentum'])
+    optim = getattr(
+        tf.optimizers.legacy,
+        config['optimizer'])(
+        learning_rate=config['learning_rate'],
+        beta_1=config['momentum'])
     discriminator.compile(loss=config['loss'], optimizer=optim)
 
     return discriminator
+
 
 def make_gan_network(config, discriminator, generator, input_dim):
     discriminator.trainable = False
@@ -52,7 +62,11 @@ def make_gan_network(config, discriminator, generator, input_dim):
     gan_output = discriminator(x)
 
     gan = Model(inputs=gan_input, outputs=gan_output)
-    optim = getattr(tf.optimizers.legacy, config['optimizer'])(learning_rate=config['learning_rate'], beta_1=config['momentum'])
+    optim = getattr(
+        tf.optimizers.legacy,
+        config['optimizer'])(
+        learning_rate=config['learning_rate'],
+        beta_1=config['momentum'])
     gan.compile(loss='binary_crossentropy', optimizer=optim)
 
     return gan

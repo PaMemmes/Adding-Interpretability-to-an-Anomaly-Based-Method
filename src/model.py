@@ -16,8 +16,8 @@ from utils.network import get_discriminator, get_generator, make_gan_network
 
 filename = '../data/preprocessed_data.pickle'
 
-if __name__ =='__main__':
-    for i in range(1,10):
+if __name__ == '__main__':
+    for i in range(1, 10):
         name = '../experiments/experiment' + str(i)
         json_file = name + '/experiment' + str(i) + '.json'
         Path(name).mkdir(parents=True, exist_ok=True)
@@ -40,8 +40,9 @@ if __name__ =='__main__':
         anomalies_percentage = anomalies / (normals + anomalies)
         print('Number of Normal Network packets in the test set:', normals)
         print('Number of Anomalous Network packets in the test set:', anomalies)
-        print('Ratio of anomalous to normal network packets in the test set: ', anomalies_percentage)
-
+        print(
+            'Ratio of anomalous to normal network packets in the test set: ',
+            anomalies_percentage)
 
         gan_loss = []
         discriminator_loss = []
@@ -50,27 +51,36 @@ if __name__ =='__main__':
         pbar = tqdm(total=batch_count, position=0, leave=True)
         generator = get_generator(config, num_features)
         discriminator = get_discriminator(config, num_features)
-        gan = make_gan_network(config, discriminator, generator, input_dim=num_features)
+        gan = make_gan_network(
+            config,
+            discriminator,
+            generator,
+            input_dim=num_features)
 
         print("Number params: ", gan.count_params())
 
         for epoch in range(50):
             for index in range(batch_count):
                 pbar.update(1)
-                noise = np.random.normal(0, 1, size=[train.batch_size, num_features])
+                noise = np.random.normal(
+                    0, 1, size=[train.batch_size, num_features])
 
                 generated_images = generator.predict_on_batch(noise)
 
-                image_batch = train.x[index * train.batch_size: (index + 1) * train.batch_size]
+                image_batch = train.x[index *
+                                      train.batch_size: (index +
+                                                         1) *
+                                      train.batch_size]
 
                 X = np.vstack((generated_images, image_batch))
-                y_dis = np.ones(2*train.batch_size)
+                y_dis = np.ones(2 * train.batch_size)
                 y_dis[:train.batch_size] = 0
 
                 discriminator.trainable = True
                 d_loss = discriminator.train_on_batch(X, y_dis)
 
-                noise = np.random.uniform(0, 1, size=[train.batch_size, num_features])
+                noise = np.random.uniform(
+                    0, 1, size=[train.batch_size, num_features])
                 y_gen = np.ones(train.batch_size)
                 discriminator.trainable = False
                 g_loss = gan.train_on_batch(noise, y_gen)
@@ -79,12 +89,15 @@ if __name__ =='__main__':
                 generator_loss.append(g_loss)
                 gan_loss.append(g_loss)
 
-            print(f"Epoch {epoch} Batch {index}  [D loss: {d_loss}] [G loss:{g_loss}]")
-        
+            print(
+                f"Epoch {epoch} Batch {index}  [D loss: {d_loss}] [G loss:{g_loss}]")
 
         plot_losses(discriminator_loss, generator_loss, name + '/loss_gan.png')
 
-        nr_batches_test = np.ceil(test.x.shape[0] // config['batch_size']).astype(np.int32)
+        nr_batches_test = np.ceil(
+            test.x.shape[0] //
+            config['batch_size']).astype(
+            np.int32)
 
         results = []
 
@@ -92,24 +105,30 @@ if __name__ =='__main__':
             ran_from = t * config['batch_size']
             ran_to = (t + 1) * config['batch_size']
             image_batch = test.x[ran_from:ran_to]
-            tmp_rslt = discriminator.predict(x=image_batch, batch_size=128, verbose=0)
+            tmp_rslt = discriminator.predict(
+                x=image_batch, batch_size=128, verbose=0)
             results = np.append(results, tmp_rslt)
         pd.options.display.float_format = '{:20,.7f}'.format
-        results_df = pd.concat([pd.DataFrame(results), pd.DataFrame(test.y)], axis=1)
+        results_df = pd.concat(
+            [pd.DataFrame(results), pd.DataFrame(test.y)], axis=1)
         results_df.columns = ['results', 'y_test']
         print('Mean score for normal packets :',
-            results_df.loc[results_df['y_test'] == 0, 'results'].mean())
+              results_df.loc[results_df['y_test'] == 0, 'results'].mean())
         print('Mean score for anomalous packets :',
-            results_df.loc[results_df['y_test'] == 1, 'results'].mean())
+              results_df.loc[results_df['y_test'] == 1, 'results'].mean())
 
         # Obtaining the lowest "anomalies_percentage" score
-        per = np.percentile(results, anomalies_percentage*100)
+        per = np.percentile(results, anomalies_percentage * 100)
         y_pred = results.copy()
         y_pred = np.array(y_pred)
 
-        probas = np.vstack((1-y_pred, y_pred)).T
-        plot_precision_recall(test.y, probas, name + '/precision_recall_only_cic.png')
-        
+        probas = np.vstack((1 - y_pred, y_pred)).T
+        plot_precision_recall(
+            test.y,
+            probas,
+            name +
+            '/precision_recall_only_cic.png')
+
         # Thresholding based on the score
         inds = y_pred > per
         inds_comp = y_pred <= per
@@ -128,16 +147,16 @@ if __name__ =='__main__':
         plot_roc(tpr, fpr, auc_curve, name + '/roc_gan_only_cic.png', 'GAN')
         cm = confusion_matrix(test.y, y_pred)
         plot_confusion_matrix(cm, name + '/confusion_gan_only_cic.png', 'GAN')
-        
+
         results = {
-                'Normals (%)': 1 - anomalies_percentage,
-                'Anomalies (%)': anomalies_percentage,
-                'Mean Score for normal packets': results_df.loc[results_df['y_test'] == 0, 'results'].mean(),
-                'Mean Score for anomalous packets': results_df.loc[results_df['y_test'] == 1, 'results'].mean(),
-                'Accuracy': accuracy_score(test.y, y_pred),
-                'Precision': precision,
-                'Recall': recall,
-                'F1': f1,
-                'I:': i}
+            'Normals (%)': 1 - anomalies_percentage,
+            'Anomalies (%)': anomalies_percentage,
+            'Mean Score for normal packets': results_df.loc[results_df['y_test'] == 0, 'results'].mean(),
+            'Mean Score for anomalous packets': results_df.loc[results_df['y_test'] == 1, 'results'].mean(),
+            'Accuracy': accuracy_score(test.y, y_pred),
+            'Precision': precision,
+            'Recall': recall,
+            'F1': f1,
+            'I:': i}
         print(results)
-        #save_results(json_file, config, results)
+        # save_results(json_file, config, results)
