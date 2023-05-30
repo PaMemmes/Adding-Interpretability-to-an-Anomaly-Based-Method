@@ -8,6 +8,7 @@ suricata_analysis/plots/*
 suricata_analysis/theZoo_fragmented/*
 suricata_analysis/theZoo_fragmented_random/*
 suricata_analysis/theZoo_original/*
+suricata_analysis/theZoo_fragmented_memcap/*
 optims/*
 *.pyc
 src/experiments/*
