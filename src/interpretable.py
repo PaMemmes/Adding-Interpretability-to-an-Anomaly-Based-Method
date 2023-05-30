@@ -26,7 +26,8 @@ def make_interpret_plots(explainer, shap_values, test_x, df_cols, name):
         show=False)
     shap.save_html(name + 'force_plot.htm', f)
     plt.close()
-
+    print(shap_values.shape)
+    print(test_x.shape)
     shap.summary_plot(
         shap_values,
         test_x,
