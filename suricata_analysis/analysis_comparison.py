@@ -23,16 +23,16 @@ CB91_Amber = '#F5B14C'
 
 class AllDataHolder():
     def __init__(self, original, frag, frag_random):
-        self.original = DataHolder('original')
-        self.frag = DataHolder('fragmented')
-        self.frag_random = DataHolder('fragmented_random')
+        self.original = DataHolder(original.kind)
+        self.frag = DataHolder(frag.kind)
+        self.frag_random = DataHolder(frag_random.kind)
         
         self.original.process_data()
         self.frag.process_data()
         self.frag_random.process_data()
 
     def make_comp_plots(self):
-        plot_comparison_packet_alerts(self.original.packets_sum, self.frag.packets_sum, self.frag_random.packets_sum, self.original.sigs_sum, self.frag.sigs_sum, self.frag_random.sigs_sum, save='plots/packet_alerts_both.pdf')
+        plot_comparison_packet_alerts(self.original.packets_sum, self.frag.packets_sum, self.frag_random.packets_sum, self.original.sigs_sum, self.frag.sigs_sum, self.frag_random.sigs_sum, save='plots/packet_alerts.pdf')
         plot_comparison_severity_distribution(self.original.sev_dist, self.frag.sev_dist, self.frag_random.sev_dist, save='plots/severity_dist_comp.pdf')
         plot_comparison_categories(self.original.category_dist, self.frag.category_dist, self.frag_random.category_dist, save='plots/category_dist_comp.pdf')
     
@@ -58,7 +58,9 @@ class DataHolder():
         self.packets_sum = 0
 
     def process_data(self):
+        index = 1
         for filepath in sorted(glob.glob('theZoo_' + self.kind + '/**/*.json')):
+            print(index)
             json_file = get_json_data(filepath)
             # print(json_file)
             alerts, packets = get_alerts_and_packets(json_file)
@@ -67,7 +69,7 @@ class DataHolder():
             self.signatures.append(nmbr_signatures)
             self.severity.append(severity)
             self.categories.append(cats)
-
+            index += 1
 
         self.sigs_sum = sum([sum(elem.values()) for elem in self.signatures])
         self.packets_sum = sum(self.packets)
