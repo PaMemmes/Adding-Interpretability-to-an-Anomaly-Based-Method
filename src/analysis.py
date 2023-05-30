@@ -4,8 +4,11 @@ import glob
 import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
+import scienceplots
 
 from utils.utils import subset
+
+plt.style.use(['ieee', 'science'])
 
 def bar_plot_agg(df):
     
@@ -18,8 +21,9 @@ def bar_plot_agg(df):
  
     sns.set_style("whitegrid", {'axes.grid' : True})
     ax = sns.barplot(x=label_counts.index.tolist(), y = label_counts.to_numpy())
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=10)
+    ax.set_xticklabels(ax.get_xticklabels())
     plt.tight_layout()
+    ax.set(xlabel = 'Attack Type', ylabel='Percentage')
     ax.bar_label(ax.containers[0], fmt='%.3f')
     fig = ax.get_figure()
     fig.savefig("../distribution_cicids2018_agg.pdf", bbox_inches="tight")
@@ -34,10 +38,12 @@ def bar_plot_binary(df):
     percentage_benign = len(subset_benign) / total_count * 100
     percentage_anomaly = len(subset_anomaly) / total_count * 100
 
-    sns.set_style("whitegrid", {'axes.grid' : True})
+    sns.set_style("darkgrid", {'axes.grid' : True})
+
     ax = sns.barplot(x=['Benign', 'Anomaly'], y = [percentage_benign, percentage_anomaly])
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=10)
+    ax.set_xticklabels(ax.get_xticklabels())
     plt.tight_layout()
+    ax.set(xlabel = 'Attack Type', ylabel='Percentage')
     ax.bar_label(ax.containers[0], fmt='%.3f')
     fig = ax.get_figure()
     fig.savefig("../distribution_cicids2018_binary.pdf", bbox_inches="tight")
@@ -50,9 +56,9 @@ def bar_plot(df):
     label_counts = label_counts.sort_values(ascending=False)
     sns.set_style("whitegrid", {'axes.grid': True})
     ax = sns.barplot(x = label_counts.index.tolist(), y=label_counts)
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=40, ha="right", fontsize=10)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=40, ha="right")
     plt.tight_layout()
-    ax.set(ylabel='Percent')
+    ax.set(xlabel = 'Attack Type', ylabel='Percentage')
     ax.bar_label(ax.containers[0], fmt='%.3f')
     fig = ax.get_figure()
     fig.savefig("../distribution_cicids2018.pdf", bbox_inches="tight")
