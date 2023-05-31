@@ -8,7 +8,8 @@ import scienceplots
 from utils.utils import subset
 
 plt.style.use(['ieee', 'science'])
-plt.style.use('seaborn')
+plt.style.use('seaborn-colorblind')
+
 def bar_plot_agg(df):
 
     df['Label'] = df['Label'].replace({'DoS-attacks-SlowHTTPTest': 'DoS', 'DoS attacks-Slowloris': 'DoS', 'DoS attacks-Hulk': 'DoS'}, regex=True)
@@ -94,17 +95,12 @@ def bar_plot(df):
 
 
 if __name__ == '__main__':
-    # if not df:
-    #     all_files = glob.glob(
-    #     os.path.join(
-    #         '../data/cicids2018',
-    #         "*.csv"))
-    #     df = pd.concat((pd.read_csv(f, engine='python') for f in all_files), ignore_index=True)
+    all_files = glob.glob(
+    os.path.join(
+        '../data/cicids2018',
+        "*.csv"))
+    df = pd.concat((pd.read_csv(f, engine='python') for f in all_files), ignore_index=True)
 
-    df = pd.read_csv(
-        '../data/Wednesday-21-02-2018_TrafficForML_CICFlowMeter.csv')
-    df = df[:50000]
-    pd.set_option('display.max_columns', 500)
     bar_plot_binary(df)
     bar_plot(df)
     bar_plot_agg(df)
