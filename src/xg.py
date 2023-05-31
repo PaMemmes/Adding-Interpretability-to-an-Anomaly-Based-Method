@@ -40,7 +40,7 @@ def xg_main(train, test, frags, trials, save='xg'):
         'objective': 'binary:logistic',
         'verbose': True,
         'gpu_id': 0,
-        'tree_method': 'exact'
+        'tree_method': 'gpu_hist'
     }
     hyperparameter_grid = {
         'max_depth': [3, 6, 9],
