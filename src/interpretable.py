@@ -95,4 +95,4 @@ def interpret_tree(model, data, save):
         df = pd.DataFrame(test_sqc.x, columns=df_cols)
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(df)
-        make_interpret_plots(explainer, shap_values, test_df, df_cols, name)
+        make_interpret_plots(explainer, shap_values, df, df_cols, name)
