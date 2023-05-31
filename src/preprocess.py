@@ -115,7 +115,7 @@ class DataFrame:
             df, labels, test_size=test_size, shuffle=False)
 
         print('Length of frags test: ', len(self.x_test_frags))
-        
+
 
     def preprocess_add(self, add_data):
         x = np.array(add_data)
@@ -206,7 +206,7 @@ class DataFrame:
                                for f in all_files), ignore_index=True)
 
         _df = df_all.copy()
-        _df = _df.drop('Timestamp', axis=1)
+        _df = _df.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
         _df = _df.reset_index(drop=True)
         _df, _labels = remove_infs(_df)
         _x_test = _df.to_numpy()
@@ -220,7 +220,7 @@ class DataFrame:
             df = dfs[col].sample(frac=1)
             if len(df) <= 5:
                 continue
-            df = df.drop('Timestamp', axis=1)
+            df = df.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
             df, y_test = remove_infs(df)
             y_test = encode(self.le, y_test)
             x_test = df.to_numpy()
