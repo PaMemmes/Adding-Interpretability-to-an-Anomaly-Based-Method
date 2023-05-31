@@ -9,6 +9,7 @@ suricata_analysis/theZoo_fragmented/*
 suricata_analysis/theZoo_fragmented_random/*
 suricata_analysis/theZoo_original/*
 suricata_analysis/theZoo_fragmented_memcap/*
+suricata_analysis/theZoo_fragmented_memcap_newest
 optims/*
 *.pyc
 src/experiments/*
