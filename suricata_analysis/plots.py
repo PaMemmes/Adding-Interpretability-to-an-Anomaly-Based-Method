@@ -12,9 +12,10 @@ from collections import defaultdict
 import orjson
 
 plt.style.use(['ieee', 'science'])
+plt.style.use('seaborn-colorblind')
 
 def make_xlabels(data, chars=None):
-    x_ticks = [i for i in data.keys()]
+    x_ticks = data
     labels = ['\n'.join(wrap(l, chars)) for l in x_ticks]
     return labels
 
@@ -23,7 +24,10 @@ def plot_comparison_severity_distribution(dist1, dist2, dist3, save=None):
     # Theoretically until 255 when creating rules manually
     width = np.min(np.diff(np.arange(2))) / 4
 
-    severity_range = np.arange(4)
+    severity_range = np.arange(4) - 1
+    dist1 = [x[1] for x in sorted(dist1.items())]
+    dist2 = [x[1] for x in sorted(dist2.items())]
+    dist3 = [x[1] for x in sorted(dist3.items())]
 
     fig, ax = plt.subplots()
     fig.set_size_inches(6,4)
@@ -33,14 +37,13 @@ def plot_comparison_severity_distribution(dist1, dist2, dist3, save=None):
     ax.set_facecolor("lightgrey")
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.set_title('Severity Distribution')
     ax.set_xlabel('Severity Level (1: Highest, 4: Lowest)')
     ax.set_ylabel('Number of Alerts')
     ax.set_xticks(severity_range + width / 2)
     ax.set_xticklabels(('1', '2', '3', '4'))
-    rects1 = ax.bar(severity_range-width/2, dist1.values(), width=width, align='center')
-    rects2 = ax.bar(severity_range+width/2, dist2.values(), width=width, align='center')
-    rects3 = ax.bar(severity_range+width*1.5, dist3.values(), width=width, align='center')
+    rects1 = ax.bar(severity_range-width/2, dist1, width=width, align='center')
+    rects2 = ax.bar(severity_range+width/2, dist2, width=width, align='center')
+    rects3 = ax.bar(severity_range+width*1.5, dist3, width=width, align='center')
     ax.bar_label(rects1)
     ax.bar_label(rects2)
     ax.bar_label(rects3)
@@ -61,7 +64,6 @@ def plot_comparison_packet_alerts(packets_sum, frag_packets_sum, rnd_frag_packet
     ax.set_facecolor("lightgrey")
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.set_title('Total Alerts vs. Total Packets')
     ax.set_xlabel('Category')
     ax.set_ylabel('Number Alerts (log)')
 
@@ -83,11 +85,17 @@ def plot_comparison_packet_alerts(packets_sum, frag_packets_sum, rnd_frag_packet
     plt.close('all')
 
 def plot_comparison_categories(categories, frag_categories, frag_rnd_categories, save=None):   
+    labels = [x[0] for x in sorted(categories.items())]
+    new_labels = make_xlabels(labels, chars=10)
+
+    categories = [x[1] for x in sorted(categories.items())]
+    frag_categories = [x[1] for x in sorted(frag_categories.items())]
+    frag_rnd_categories = [x[1] for x in sorted(frag_rnd_categories.items())]
+    
     width = np.min(np.diff(np.arange(2))) / 4
 
     severity_range = np.arange(6)
 
-    new_labels = make_xlabels(categories, chars=10)
     fig, ax = plt.subplots()
     fig.set_size_inches(6,4)
     ax.set_axisbelow(True)
@@ -96,14 +104,13 @@ def plot_comparison_categories(categories, frag_categories, frag_rnd_categories,
     ax.set_facecolor("lightgrey")
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.set_title('Category Distribution')
     ax.set_xlabel('Category')
     ax.set_ylabel('Number of Alerts')
     ax.set_xticks(severity_range + width / 2)
     ax.set_xticklabels(new_labels)
-    rects1 = ax.bar(severity_range-width/2, categories.values(), width=width, align='center')
-    rects2 = ax.bar(severity_range+width/2, frag_categories.values(), width=width, align='center')
-    rects3 = ax.bar(severity_range+width*1.5, frag_rnd_categories.values(), width=width, align='center')
+    rects1 = ax.bar(severity_range-width/2, categories, width=width, align='center')
+    rects2 = ax.bar(severity_range+width/2, frag_categories, width=width, align='center')
+    rects3 = ax.bar(severity_range+width*1.5, frag_rnd_categories, width=width, align='center')
     ax.bar_label(rects1)
     ax.bar_label(rects2)
     ax.bar_label(rects3)

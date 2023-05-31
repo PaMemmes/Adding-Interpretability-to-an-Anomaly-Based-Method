@@ -2,8 +2,13 @@ import orjson
 from collections import defaultdict
 
 def get_json_data(file):
-    return [orjson.loads(line) for line in open(file, "rb")]
-
+    # return [orjson.loads(line) for line in open(file, "rb")]
+    index = 1
+    result = []
+    for line in open(file, "rb"):
+        l = orjson.loads(line)
+        result.append(l)
+    return result
 def get_alerts_and_packets(json_data):
     alerts = [line for line in json_data if "alert" in line]
     packets = len(json_data)
