@@ -15,7 +15,7 @@ from preprocess import DataFrame
 from utils.utils import read_csv, NumpyEncoder
 
 
-def make_interpret_plots(explainer, shap_values, test_x, df_cols, name):
+def make_interpret_plots(explainer, shap_values, test_x, test_y, df_cols, name):
     if len(shap_values) > 1000:
         shap_values = shap_values[:1000]
         test_x = test_x[:1000]
@@ -24,22 +24,24 @@ def make_interpret_plots(explainer, shap_values, test_x, df_cols, name):
         shap_values,
         test_x,
         feature_names=df_cols,
+        link='logit',
         show=False)
     shap.save_html(name + 'force_plot.htm', f)
     plt.close()
-    print(test_x.shape)
-    print(shap_values.shape)
-    print(shap_values[1, :].shape)
-    print(test_x.iloc[1,:].shape)
     for i in range(15):
-        f = shap.force_plot(
+        shap.force_plot(
             explainer.expected_value,
             shap_values[i, :],
-            test_x.iloc[i, :],
-            feature_names=df_cols,
+            test_x.iloc[i, :].values,
+            feature_names=df_cols.values,
+            matplotlib=True,
             show=False)
-        plt.savefig(name + 'force_plot' + str(i) + '_.pdf', bbox_inches='tight', dpi=300)
+        plt.savefig(name + 'force_plot' + str(i) + '_' + str(int(test_y[i])) + '.pdf', bbox_inches='tight', dpi=300)
         plt.close()
+        shap.decision_plot(explainer.expected_value, shap_values[i, :], test_x.iloc[i,:], feature_names=df_cols.values,
+            link='logit', highlight=0, show=False)
+        plt.savefig(name + 'decision_plot' + str(i) + '_' + str(int(test_y[i])) + '_.pdf', bbox_inches='tight', dpi=300)
+        plt.close()        
 
     shap.summary_plot(
         shap_values,
@@ -64,7 +66,7 @@ def make_interpret_plots(explainer, shap_values, test_x, df_cols, name):
     plt.close()
 
 
-    shap.summary_plot(shap_values, test_x, feature_names=df_cols, show=False)
+    shap.summary_plot(shap_values, test_x, feature_names=df_cols,show=False)
     f = plt.gcf()
     f.savefig(name + 'summary.pdf', bbox_inches='tight', dpi=300)
     plt.close()
@@ -134,6 +136,7 @@ def interpret_tree(model, data, save):
         explainer,
         shap_values,
         test_df,
+        data.test_sqc.y,
         df_cols,
         name)
     
@@ -147,6 +150,7 @@ def interpret_tree(model, data, save):
         explainer,
         shap_values,
         test_df,
+        data.test_sqc.y,
         df_cols,
         name_frags)
 
@@ -158,4 +162,4 @@ def interpret_tree(model, data, save):
         df = pd.DataFrame(test_sqc.x, columns=df_cols)
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(df, check_additivity=False)
-        make_interpret_plots(explainer, shap_values, df, df_cols, name)
+        make_interpret_plots(explainer, shap_values, df, data.test_sqc.y, df_cols, name)
