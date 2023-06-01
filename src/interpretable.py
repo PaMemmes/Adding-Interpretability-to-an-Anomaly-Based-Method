@@ -27,8 +27,7 @@ def make_interpret_plots(explainer, shap_values, test_x, df_cols, name):
         show=False)
     shap.save_html(name + 'force_plot.htm', f)
     plt.close()
-    print(shap_values.shape)
-    print(test_x.shape)
+
     shap.summary_plot(
         shap_values,
         test_x,
@@ -38,10 +37,28 @@ def make_interpret_plots(explainer, shap_values, test_x, df_cols, name):
     f = plt.gcf()
     f.savefig(name + 'summary_bar.pdf', bbox_inches='tight', dpi=300)
     plt.close()
+    
+    shap.summary_plot(
+            shap_values,
+            test_x,
+            plot_type="bar",
+            feature_names=df_cols,
+            max_display=len(df_cols),
+            show=False
+            )
+    f = plt.gcf()
+    f.savefig(name + 'summary_bar_all.pdf', bbox_inches='tight', dpi=300)
+    plt.close()
+
 
     shap.summary_plot(shap_values, test_x, feature_names=df_cols, show=False)
     f = plt.gcf()
     f.savefig(name + 'summary.pdf', bbox_inches='tight', dpi=300)
+    plt.close()
+
+    shap.summary_plot(shap_values, test_x, feature_names=df_cols, max_display=len(df_cols), show=False)
+    f = plt.gcf()
+    f.savefig(name + 'summary_all.pdf', bbox_inches='tight', dpi=300)
     plt.close()
 
     for col in df_cols:
