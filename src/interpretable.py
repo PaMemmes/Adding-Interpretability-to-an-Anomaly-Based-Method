@@ -16,6 +16,11 @@ from utils.utils import read_csv, NumpyEncoder
 
 
 def make_interpret_plots(explainer, shap_values, test_x, test_y, df_cols, name):
+    # Makes plots for interpretation
+    # Creates for the first 15 instances force and decision plots
+    # Creates summary and summary bar plots for the first 20 (default) features
+    # Creates summary and summary bar plots for all features
+    # Creates a dependence plot for each feature, dependence is choosing automatically by SHAP
     if len(shap_values) > 1000:
         shap_values = shap_values[:1000]
         test_x = test_x[:1000]
@@ -94,6 +99,7 @@ def make_interpret_plots(explainer, shap_values, test_x, test_y, df_cols, name):
         json.dump(dumped, f)
 
 def feature_importance(model, df_cols, importance_type):
+    # Calculates feature importance of XGBoost model
     weight = model.get_booster().get_score(importance_type=importance_type)
     sorted_idx = np.argsort(list(weight.values()))
     weight = np.sort(list(weight.values()))
@@ -123,6 +129,7 @@ def plot_importance(model, name, df_cols, importance_type):
     plt.close()
 
 def interpret_tree(model, data, save):
+    # Interprets XGBoost model
     name = '../experiments/' + save + '/best/'
     name_frags = '../experiments/' + save + '/best/frags'
 

@@ -24,6 +24,8 @@ import scipy.stats as stats
 
 
 def xg_main(train, test, frags, trials, save='xg'):
+    # Runs XGBoost model with hyperparameteroptimization 
+    # Evaluation on frags and on csecicids2018
     name = '../experiments/' + save + '/best/'
     Path(name).mkdir(parents=True, exist_ok=True)
 

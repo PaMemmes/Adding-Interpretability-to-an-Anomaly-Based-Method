@@ -5,6 +5,7 @@ import numpy as np
 from ydata_profiling import ProfileReport
 
 def analyze_frags():
+    # Creates a ydata Profile html Report 
     all_files = glob.glob(os.path.join('../data/csv_fragmentedV3', "*.csv"))
     df = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
 

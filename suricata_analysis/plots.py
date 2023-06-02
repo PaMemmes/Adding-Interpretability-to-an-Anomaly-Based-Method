@@ -15,6 +15,7 @@ plt.style.use(['ieee', 'science'])
 plt.style.use('seaborn-colorblind')
 
 def make_xlabels(data, chars=None):
+    # Formats x labels by linebreaks
     x_ticks = data
     labels = ['\n'.join(wrap(l, chars)) for l in x_ticks]
     return labels
@@ -54,8 +55,8 @@ def plot_comparison_severity_distribution(dist1, dist2, dist3, save=None):
     plt.close('all')
 
 def plot_comparison_packet_alerts(packets_sum, frag_packets_sum, rnd_frag_packets_sum, sigs_sum, frag_sigs_sum, rnd_frag_sigs_sum, save=None):   
+    # Plots bar chart of alerts for 3 experiments
     width = np.min(np.diff(np.arange(2))) / 4
-
     fig, ax = plt.subplots()
     fig.set_size_inches(6,4)
     ax.set_axisbelow(True)
@@ -85,6 +86,7 @@ def plot_comparison_packet_alerts(packets_sum, frag_packets_sum, rnd_frag_packet
     plt.close('all')
 
 def plot_comparison_categories(categories, frag_categories, frag_rnd_categories, save=None):   
+    # Plots bar chart of alert categories of 3 experiments
     labels = [x[0] for x in sorted(categories.items())]
     new_labels = make_xlabels(labels, chars=10)
 
@@ -120,7 +122,8 @@ def plot_comparison_categories(categories, frag_categories, frag_rnd_categories,
         fig.savefig(save)
     plt.close('all')
 
-def plot_packet_alerts(packets_sum, sigs_sum, save=None):    
+def plot_packet_alerts(packets_sum, sigs_sum, save=None):
+    # Plots total packets and total alerts
     fig, ax = plt.subplots()
     fig.set_size_inches(6,4)
     ax.set_axisbelow(True)
@@ -140,7 +143,8 @@ def plot_packet_alerts(packets_sum, sigs_sum, save=None):
         fig.savefig(save)
     plt.close('all')
 
-def plot_alerts(nmbr_signatures, file, save=None):    
+def plot_alerts(nmbr_signatures, file, save=None):
+    # Plots alerts of an individual malware 
     xlabels_new = make_xlabels(nmbr_signatures, chars=10)
     fig, ax = plt.subplots()
     file = file.removesuffix('/eve.json')
@@ -164,6 +168,7 @@ def plot_alerts(nmbr_signatures, file, save=None):
     plt.close('all')
 
 def plot_alert_distribution(sigs_dist, save=None):
+    # Plots the alert distribution of one experiment
     xlabels_new = make_xlabels(sigs_dist, chars=8)
 
     fig, ax = plt.subplots()
@@ -185,6 +190,7 @@ def plot_alert_distribution(sigs_dist, save=None):
     plt.close('all')
 
 def plot_categories(category_dist, save=None):
+    # Plots category distribution of an experiment
     fig, ax = plt.subplots()
     fig.set_size_inches(8,4)
     ax.set_axisbelow(True)

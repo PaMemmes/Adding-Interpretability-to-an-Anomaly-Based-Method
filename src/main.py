@@ -11,12 +11,13 @@ BATCH_SIZE = 256
 
 
 def run_xg(trials, frags=True):
+    # Runs xg boost model and interprets it
     if frags:
         name = 'xg_frags'
     else:
         name = 'xg'
     data = DataFrame()
-    data.preprocess(filename=None, kind=None, frags=name)
+    data.preprocess(filename=None, kind=None, frags=name, scale=False)
     model = xg_main(
         train=data.train_sqc,
         test=data.test_sqc,
@@ -27,6 +28,7 @@ def run_xg(trials, frags=True):
 
 
 def run_nn(model_name, epochs, retrain, trials, frags=True):
+    # Runs neural network: model_name = [gan, wgan]
     if frags:
         name = '_frags'
     else:
@@ -44,6 +46,7 @@ def run_nn(model_name, epochs, retrain, trials, frags=True):
 
 
 def run_combined(epochs, retrain, trials, frags=True):
+    # Runs combined model: 1. WGAN 2. XGBoost
     if frags:
         name = '_frags'
     else:
@@ -65,7 +68,7 @@ def run_combined(epochs, retrain, trials, frags=True):
         gan_data.append(fake_x)
     print('Additional data: ', len(gan_data) * BATCH_SIZE)
     data = DataFrame()
-    data.preprocess(filename=None, kind=None, frags=frags, add=gan_data)
+    data.preprocess(filename=None, kind=None, frags=frags, add=gan_data, scale=False)
     model = xg_main(
         train=data.train_sqc,
         test=data.test_sqc,
@@ -76,6 +79,7 @@ def run_combined(epochs, retrain, trials, frags=True):
 
 
 if __name__ == '__main__':
+    # python main.py 1 1 1
     parser = argparse.ArgumentParser('python3 main.py')
     parser.add_argument(
         'trials',
@@ -90,7 +94,6 @@ if __name__ == '__main__':
         help='Number of epochs to train: [0, inf]',
         type=int)
     args = parser.parse_args()
-
 
     print('Running XG with no frags')
     run_xg(args.trials, frags=False)
