@@ -59,13 +59,13 @@ class DataFrame:
 
         print('Length of CSE-CICIDS2018 data', len(self.df))
         self.df = self.df.sample(frac=1)
-        self.df = self.df.drop('Timestamp', axis=1)
+        self.df = self.df.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
         self.df_cols = self.df.columns
 
     def create_label_encoder(self):
         # Auxilliary df for LabelEncoder() to encode the right number of labels
         df_exe = pd.read_csv(
-            '../data/csv_fragmentedV3/All.ElectroRAT.pcap_Flow.csv')
+            '/mnt/md0/files_memmesheimer/csv_fragmentedV3/All.ElectroRAT.pcap_Flow.csv')
         df_exe = df_exe.drop(
             'Timestamp', axis=1)
         df_exe['Label'] = 'Fragmented Malware'
@@ -93,7 +93,7 @@ class DataFrame:
     def make_frags(self, test_size):
         all_files = glob.glob(
             os.path.join(
-                '../data/csv_fragmentedV3/',
+                '/mnt/md0/files_memmesheimer/csv_fragmentedV3/',
                 "*.csv"))
         self.df_frag = pd.concat((pd.read_csv(f, engine='python')
                                  for f in all_files), ignore_index=True)
@@ -130,7 +130,8 @@ class DataFrame:
             kind=None,
             frags=False,
             add=None,
-            test_size=0.15):
+            test_size=0.15,
+            scale=True):
         self.create_df(filename)
         self.create_label_encoder()
         self.create_oos_test(test_size)
@@ -156,12 +157,16 @@ class DataFrame:
             x_train, y_train = subset(x_train, y_train, 1)
             print('Using only anomaly data')
 
-        scaler = MinMaxScaler()
+        if scale is True:
+            scaler = MinMaxScaler()
 
-        x_train = scaler.fit_transform(x_train)
-        self.x_test = scaler.transform(self.x_test)
-        self.x_test_frags = scaler.transform(self.x_test_frags)
+            x_train = scaler.fit_transform(x_train)
+            self.x_test = scaler.transform(self.x_test)
+            self.x_test_frags = scaler.transform(self.x_test_frags)
 
+        self.x_test = self.x_test
+        self.x_test_frags = self.x_test_frags
+        
         self.train_sqc = DataSequence(x_train, y_train, batch_size=BATCH_SIZE)
         self.test_sqc = DataSequence(
             self.x_test, self.y_test, batch_size=BATCH_SIZE)
@@ -188,7 +193,7 @@ class DataFrame:
             dfs[col] = df_all[df_all['Label'] == col]
         self.df = dfs['Benign']
 
-        self.df = self.df.drop('Timestamp', axis=1)
+        self.df = self.df.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
         self.df_cols = self.df.columns
 
     def seperate_dfs(self, filename, test_size=0.15):
@@ -224,7 +229,6 @@ class DataFrame:
             df, y_test = remove_infs(df)
             y_test = encode(self.le, y_test)
             x_test = df.to_numpy()
-            x_test = scaler.transform(x_test)
 
             test_sqc = DataSequence(x_test, y_test, batch_size=BATCH_SIZE)
             self.seperate_tests[col] = test_sqc

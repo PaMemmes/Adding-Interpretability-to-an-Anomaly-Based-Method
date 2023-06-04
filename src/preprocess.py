@@ -130,7 +130,8 @@ class DataFrame:
             kind=None,
             frags=False,
             add=None,
-            test_size=0.15):
+            test_size=0.15,
+            scale=True):
         self.create_df(filename)
         self.create_label_encoder()
         self.create_oos_test(test_size)
@@ -156,12 +157,15 @@ class DataFrame:
             x_train, y_train = subset(x_train, y_train, 1)
             print('Using only anomaly data')
 
-        scaler = MinMaxScaler()
+        if scale is True:
+            scaler = MinMaxScaler()
 
-        x_train = scaler.fit_transform(x_train)
-        self.x_test = scaler.transform(self.x_test)
-        self.x_test_frags = scaler.transform(self.x_test_frags)
-
+            x_train = scaler.fit_transform(x_train)
+            self.x_test = scaler.transform(self.x_test)
+            self.x_test_frags = scaler.transform(self.x_test_frags)
+        self.x_test = self.x_test
+        self.x_test_frags = self.x_test_frags
+        
         self.train_sqc = DataSequence(x_train, y_train, batch_size=BATCH_SIZE)
         self.test_sqc = DataSequence(
             self.x_test, self.y_test, batch_size=BATCH_SIZE)
@@ -224,7 +228,7 @@ class DataFrame:
             df, y_test = remove_infs(df)
             y_test = encode(self.le, y_test)
             x_test = df.to_numpy()
-            x_test = scaler.transform(x_test)
+            # x_test = scaler.transform(x_test)
 
             test_sqc = DataSequence(x_test, y_test, batch_size=BATCH_SIZE)
             self.seperate_tests[col] = test_sqc
