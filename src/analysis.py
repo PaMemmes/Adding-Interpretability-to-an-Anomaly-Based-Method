@@ -4,11 +4,9 @@ import glob
 import numpy as np
 import matplotlib.pyplot as plt
 import scienceplots
-
-from utils.utils import subset
-
-plt.style.use(['ieee', 'science'])
-plt.style.use('seaborn-colorblind')
+import seaborn as sns
+from textwrap import wrap
+from itertools import combinations
 
 def bar_plot_agg(df):
 
@@ -17,9 +15,8 @@ def bar_plot_agg(df):
     df['Label'] = df['Label'].replace({'Brute Force -Web': 'Brute Force', 'Brute Force -XSS': 'Brute Force', 'SSH-BruteForce': 'Brute Force', 'FTP:BruteForce':'Brute Force'}, regex=True)
 
     label_counts = df['Label'].value_counts(normalize=True) * 100
-    label_counts = label_counts.sort_values(ascending=False)
     fig, ax = plt.subplots()
-    fig.set_size_inches(6,4)
+    fig.set_size_inches(8,4)
     ax.set_axisbelow(True)
     ax.yaxis.grid(color='white', linestyle='solid')
     ax.xaxis.grid(color='white', linestyle='solid')
@@ -30,11 +27,10 @@ def bar_plot_agg(df):
     ax.set_xticklabels(label_counts.index.tolist())
     ax.set_xlabel('Attack Type')
     ax.set_ylabel('Percentage')
-
     bar = ax.bar(x=label_counts.index.tolist(), height=label_counts)
-    ax.set_xticklabels(ax.get_xticklabels())
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=40, ha="right")
     plt.tight_layout()
-    ax.bar_label(ax.containers[0], fmt='%.3f')
+    ax.bar_label(ax.containers[0], fmt='%.4f')
     fig = ax.get_figure()
     fig.savefig("../distribution_cicids2018_agg.pdf", bbox_inches="tight")
     plt.close()
@@ -45,8 +41,8 @@ def bar_plot_binary(df):
     subset_anomaly = df[df['Label'] != 'Benign']
 
     total_count = len(df)
-    percentage_benign = len(subset_benign) / total_count * 100
-    percentage_anomaly = len(subset_anomaly) / total_count * 100
+    percentage_benign = len(subset_benign)
+    percentage_anomaly = len(subset_anomaly)
 
     fig, ax = plt.subplots()
     fig.set_size_inches(6,4)
@@ -68,12 +64,10 @@ def bar_plot_binary(df):
     fig.savefig("../distribution_cicids2018_binary.pdf", bbox_inches="tight")
     plt.close()
 
-
 def bar_plot(df):
     label_counts = df['Label'].value_counts(normalize=True) * 100
-    label_counts = label_counts.sort_values(ascending=False)
     fig, ax = plt.subplots()
-    fig.set_size_inches(6,4)
+    fig.set_size_inches(10,6)
     ax.set_axisbelow(True)
     ax.yaxis.grid(color='white', linestyle='solid')
     ax.xaxis.grid(color='white', linestyle='solid')
@@ -88,19 +82,37 @@ def bar_plot(df):
     ax.set_xticklabels(ax.get_xticklabels(), rotation=40, ha="right")
     plt.tight_layout()
     ax.set(xlabel = 'Attack Type', ylabel='Percentage')
-    ax.bar_label(ax.containers[0], fmt='%.3f')
+    ax.bar_label(ax.containers[0], fmt='%.4f')
     fig = ax.get_figure()
     fig.savefig("../distribution_cicids2018.pdf", bbox_inches="tight")
     plt.close()
 
+def reduce_corr(df, threshold):
+    under_thresh = set()
+    for (row, column) in combinations(df.columns, 2):
+        if (abs(df.loc[row, column]) >= threshold):
+            under_thresh.add(row)
+            under_thresh.add(column)
+    under_thresh = sorted(under_thresh)
+    new_corr = df.loc[under_thresh, under_thresh]
+    return new_corr
+
+def plot_corr(df):
+    corr = df.corr()
+    plt.figure(figsize=(19,10))
+    corr = reduce_corr(corr, 0.9)
+    sns.heatmap(corr, cmap="YlGnBu")
+    plt.savefig('corr.pdf')
+    plt.show()
 
 if __name__ == '__main__':
-    all_files = glob.glob(
-    os.path.join(
-        '../data/cicids2018',
-        "*.csv"))
-    df = pd.concat((pd.read_csv(f, engine='python') for f in all_files), ignore_index=True)
-
-    bar_plot_binary(df)
-    bar_plot(df)
-    bar_plot_agg(df)
+    # all_files = glob.glob(
+    # os.path.join(
+    #     '../data/cicids2018',
+    #     "*.csv"))
+    # df = pd.concat((pd.read_csv(f, engine='python') for f in all_files), ignore_index=True)
+    df = pd.read_csv('../data/cicids2018/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv')
+    plot_corr(df)
+    # bar_plot_binary(df)
+    # bar_plot(df)
+    # bar_plot_agg(df)
