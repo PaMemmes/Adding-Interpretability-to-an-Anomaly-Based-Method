@@ -22,75 +22,80 @@ def make_local_plots(explainer, shap_values, test_x, preds, test_y, df_cols, nam
     for j in range(len(test_x)):
         if preds[j] == 1 and preds[j] == test_y[j]:
             if a == 15:
-                break
+                continue
+            feature_names = [a + ": " + str(b) for a,b in zip(df_cols, np.abs(shap_values).mean(0).round(2))]
             shap.force_plot(
                 explainer.expected_value,
                 shap_values[j, :],
                 test_x.iloc[j, :].values,
-                feature_names=df_cols.values,
+                feature_names=feature_names,
                 matplotlib=True,
                 show=False)
-            plt.savefig(name + 'force_plot_' + str(a) + '_pred(1)_truth(1).pdf', bbox_inches='tight', dpi=300)
+            plt.savefig(name + 'force_plot_pred(1)_truth(1)_' + str(a) + '.pdf', bbox_inches='tight', dpi=300)
             plt.close()
-            shap.decision_plot(explainer.expected_value, shap_values[j, :], test_x.iloc[j,:], feature_names=df_cols.values,
+            shap.decision_plot(explainer.expected_value, shap_values[j, :], test_x.iloc[j,:], feature_names=feature_names,
                 link='logit', highlight=0, show=False)
-            plt.savefig(name + 'decision_plot_' + str(a) + '_pred(1)_truth(1).pdf', bbox_inches='tight', dpi=300)
+            plt.savefig(name + 'decision_plot_pred(1)_truth(1)_' + str(a) + '.pdf', bbox_inches='tight', dpi=300)
             plt.close()
             a+=1
         
         elif preds[j] == 0 and preds[j] == test_y[j]:
-            if b == 15: 
-                break
+            if b == 15:
+                continue
+            feature_names = [a + ": " + str(b) for a,b in zip(df_cols, np.abs(shap_values).mean(0).round(2))]
             shap.force_plot(
                 explainer.expected_value,
                 shap_values[j, :],
                 test_x.iloc[j, :].values,
-                feature_names=df_cols.values,
+                feature_names=feature_names,
                 matplotlib=True,
                 show=False)
-            plt.savefig(name + 'force_plot_' + str(b) + '_pred(0)_truth(0).pdf', bbox_inches='tight', dpi=300)
+            plt.savefig(name + 'force_plot_pred(0)_truth(0)_' + str(b) + '.pdf', bbox_inches='tight', dpi=300)
             plt.close()
-            shap.decision_plot(explainer.expected_value, shap_values[j, :], test_x.iloc[j,:], feature_names=df_cols.values,
+            shap.decision_plot(explainer.expected_value, shap_values[j, :], test_x.iloc[j,:], feature_names=feature_names,
                 link='logit', highlight=0, show=False)
-            plt.savefig(name + 'decision_plot_' + str(b) + '_pred(0)_truth(0).pdf', bbox_inches='tight', dpi=300)
+            plt.savefig(name + 'decision_plot_pred(0)_truth(0)_' + str(b) + '.pdf', bbox_inches='tight', dpi=300)
             plt.close()
-            d+=1
+            b+=1
 
         elif preds[j] == 1 and preds[j] != test_y[j]:
             if c == 15:
-                break
+                continue
+            feature_names = [a + ": " + str(b) for a,b in zip(df_cols, np.abs(shap_values).mean(0).round(2))]
             shap.force_plot(
                 explainer.expected_value,
                 shap_values[j, :],
                 test_x.iloc[j, :].values,
-                feature_names=df_cols.values,
+                feature_names=feature_names,
                 matplotlib=True,
                 show=False)
-            plt.savefig(name + 'force_plot_' + str(c) + '_pred(1)_truth(0).pdf', bbox_inches='tight', dpi=300)
+            plt.savefig(name + 'force_plot_pred(1)_truth(0)_' + str(c) + '.pdf', bbox_inches='tight', dpi=300)
             plt.close()
-            shap.decision_plot(explainer.expected_value, shap_values[j, :], test_x.iloc[j,:], feature_names=df_cols.values,
+            shap.decision_plot(explainer.expected_value, shap_values[j, :], test_x.iloc[j,:], feature_names=feature_names,
                 link='logit', highlight=0, show=False)
-            plt.savefig(name + 'decision_plot_' + str(c) + '_pred(1)_truth(0).pdf', bbox_inches='tight', dpi=300)
+            plt.savefig(name + 'decision_plot_pred(1)_truth(0)_' + str(c) + '.pdf', bbox_inches='tight', dpi=300)
             plt.close()
             c+=1
 
         elif preds[j] == 0 and preds[j] != test_y[j]:
             if d == 15:
-                break
+                continue
+            feature_names = [a + ": " + str(b) for a,b in zip(df_cols, np.abs(shap_values).mean(0).round(2))]
             shap.force_plot(
                 explainer.expected_value,
                 shap_values[j, :],
                 test_x.iloc[j, :].values,
-                feature_names=df_cols.values,
+                feature_names=feature_names,
                 matplotlib=True,
                 show=False)
-            plt.savefig(name + 'force_plot_' + str(d) + '_pred(0)_truth(1).pdf', bbox_inches='tight', dpi=300)
+            plt.savefig(name + 'force_plot_pred(0)_truth(1)_' + str(d) + '.pdf', bbox_inches='tight', dpi=300)
             plt.close()
-            shap.decision_plot(explainer.expected_value, shap_values[j, :], test_x.iloc[j,:], feature_names=df_cols.values,
+            shap.decision_plot(explainer.expected_value, shap_values[j, :], test_x.iloc[j,:], feature_names=feature_names,
                 link='logit', highlight=0, show=False)
-            plt.savefig(name + 'decision_plot_' + str(d) + '_pred(0)_truth(1).pdf', bbox_inches='tight', dpi=300)
+            plt.savefig(name + 'decision_plot_pred(0)_truth(1)_' + str(d) + '.pdf', bbox_inches='tight', dpi=300)
             plt.close()
             d += 1
+
         if a == 15 and b == 15 and c == 15 and d == 15:
             break
             
