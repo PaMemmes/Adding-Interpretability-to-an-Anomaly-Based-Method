@@ -16,6 +16,42 @@ from utils.utils import remove_infs, make_labels_binary, subset, encode
 
 BATCH_SIZE = 256
 
+# FEATURES_DROPPED = [
+#     'Dst IP',
+#     'Flow ID',
+#     'Src IP',
+#     'Src Port',
+#     'Timestamp',
+#     'Bwd Seg Size Avg',
+#     'CWE Flag Count',
+#     'Bwd PSH Flags',
+#     'Fwd Seg Size Avg',
+#     'Fwd Byts/b Avg',
+#     'Fwd Pkts/b Avg',
+#     'Fwd Blk Rate Avg',
+#     'Bwd Byts/b Avg',
+#     'Bwd Blk Rate Avg',
+#     'Protocol',
+#     'Active Mean',
+#     'Pkt Len Min',
+#     'Fwd URG Flags',
+#     'Active Std',
+#     'Bwd Pkt Len Min',
+#     'Active Max',
+#     'Fwd PSH Flags',
+#     'Idle Std',
+#     'Fwd Pkt Len Min',
+#     'Bwd URG Flags',
+#     'Bwd Pkts/b Avg',
+#     'Pkt Len Var',
+#     'Bwd IAT Mean',
+#     'Flow Pkts/s',
+#     'Down/Up Ratio',
+#     'Active Min',
+#     'FIN Flag Cnt',
+#     'Pkt Size Avg']
+
+FEATURES_DROPPED = ['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp']
 
 @dataclass
 class DataFrame:
@@ -59,8 +95,7 @@ class DataFrame:
 
         print('Length of CSE-CICIDS2018 data', len(self.df))
         self.df = self.df.sample(frac=1)
-        self.df = self.df.drop(
-            ['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
+        self.df = self.df.drop(FEATURES_DROPPED, axis=1)
         self.df_cols = self.df.columns
 
     def create_label_encoder(self):
@@ -98,8 +133,7 @@ class DataFrame:
                 "*.csv"))
         self.df_frag = pd.concat((pd.read_csv(f, engine='python')
                                  for f in all_files), ignore_index=True)
-        self.df_frag = self.df_frag.drop(
-            ['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
+        self.df_frag = self.df_frag.drop(FEATURES_DROPPED, axis=1)
         assert len(self.df_frag.columns), len(self.df_cols)
         self.df_frag['Label'] = 'Fragmented Malware'
         self.df_frag['Dst Port'] = np.random.randint(
@@ -163,6 +197,7 @@ class DataFrame:
             x_train = scaler.fit_transform(x_train)
             self.x_test = scaler.transform(self.x_test)
             self.x_test_frags = scaler.transform(self.x_test_frags)
+
         self.x_test = self.x_test
         self.x_test_frags = self.x_test_frags
 
@@ -190,8 +225,7 @@ class DataFrame:
                                for f in all_files), ignore_index=True)
 
         _df = df_all.copy()
-        _df = _df.drop(['Dst IP', 'Flow ID', 'Src IP',
-                       'Src Port', 'Timestamp'], axis=1)
+        _df = _df.drop(FEATURES_DROPPED, axis=1)
         _df = _df.reset_index(drop=True)
         _df, _labels = remove_infs(_df)
         _x_test = _df.to_numpy()
@@ -205,8 +239,7 @@ class DataFrame:
             df = dfs[col].sample(frac=1)
             if len(df) <= 5:
                 continue
-            df = df.drop(['Dst IP', 'Flow ID', 'Src IP',
-                         'Src Port', 'Timestamp'], axis=1)
+            df = df.drop(FEATURES_DROPPED, axis=1)
             df, y_test = remove_infs(df)
             y_test = encode(self.le, y_test)
             x_test = df.to_numpy()
