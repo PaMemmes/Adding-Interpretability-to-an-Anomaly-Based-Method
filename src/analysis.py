@@ -7,6 +7,9 @@ import scienceplots
 import seaborn as sns
 from textwrap import wrap
 from itertools import combinations
+from ydata_profiling import ProfileReport
+
+from utils.utils import remove_infs
 
 def bar_plot_agg(df):
 
@@ -32,7 +35,7 @@ def bar_plot_agg(df):
     plt.tight_layout()
     ax.bar_label(ax.containers[0], fmt='%.4f')
     fig = ax.get_figure()
-    fig.savefig("../distribution_cicids2018_agg.pdf", bbox_inches="tight")
+    fig.savefig("../analysis_plots/distribution_cicids2018_agg.pdf", bbox_inches="tight")
     plt.close()
 
 def bar_plot_binary(df):
@@ -61,7 +64,7 @@ def bar_plot_binary(df):
     plt.tight_layout()
     ax.bar_label(bar, fmt='%.3f')
     fig = ax.get_figure()
-    fig.savefig("../distribution_cicids2018_binary.pdf", bbox_inches="tight")
+    fig.savefig("../analysis_plots/distribution_cicids2018_binary.pdf", bbox_inches="tight")
     plt.close()
 
 def bar_plot(df):
@@ -84,7 +87,7 @@ def bar_plot(df):
     ax.set(xlabel = 'Attack Type', ylabel='Percentage')
     ax.bar_label(ax.containers[0], fmt='%.4f')
     fig = ax.get_figure()
-    fig.savefig("../distribution_cicids2018.pdf", bbox_inches="tight")
+    fig.savefig("../analysis_plots/distribution_cicids2018.pdf", bbox_inches="tight")
     plt.close()
 
 def reduce_corr(df, threshold):
@@ -102,9 +105,23 @@ def plot_corr(df):
     plt.figure(figsize=(19,10))
     corr = reduce_corr(corr, 0.9)
     sns.heatmap(corr, cmap="YlGnBu")
-    plt.savefig('corr.pdf')
+    plt.savefig('../analysis_plots/corr.pdf')
     plt.show()
 
+def plot_dists(df):
+    print(df)
+    # ['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp']
+    for col in df.columns:
+        save =  col.replace("/", "_").strip()
+        sns.kdeplot(x=pd.to_numeric(df[col]), fill=True, log_scale=(False, True))
+        plt.savefig('../analysis_plots/' + save + '_kde_log.pdf')
+        plt.close()
+    for col in df.columns:
+        save =  col.replace("/", "_").strip()
+        sns.kdeplot(x=pd.to_numeric(df[col]), fill=True)
+        plt.savefig('../analysis_plots/' + save + '_kde.pdf')
+        plt.close()
+    
 if __name__ == '__main__':
     # all_files = glob.glob(
     # os.path.join(
@@ -112,7 +129,11 @@ if __name__ == '__main__':
     #     "*.csv"))
     # df = pd.concat((pd.read_csv(f, engine='python') for f in all_files), ignore_index=True)
     df = pd.read_csv('../data/cicids2018/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv')
-    plot_corr(df)
+    df = df.drop('Timestamp', axis=1)
+    df, _ = remove_infs(df) 
+    #plot_corr(df)
     # bar_plot_binary(df)
     # bar_plot(df)
     # bar_plot_agg(df)
+    # df.hist(column="Dst Port")
+    plot_dists(df)
