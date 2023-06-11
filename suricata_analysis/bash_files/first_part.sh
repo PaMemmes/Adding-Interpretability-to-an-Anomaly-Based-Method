@@ -1,13 +1,9 @@
 #!/bin/bash +x
-
 cp -r git_repos/theZoo/malware/Binaries/ .
 mv Binaries theZoo
 cd theZoo
-mkdir split
-mv * split/
-cp /home/pascal/bash_files/Dockerfile .
+
 # Unzip every package in folder
-cd split
 7z x -o* .
 
 # Delete unnecessary files
@@ -45,3 +41,17 @@ rm -r ZeroLocker/
 # Sanitize spaces in filenames and directories
 find . -name "* *" -type d | rename 's/ /_/g'
 find . -name "* *" -type f | rename 's/ /_/g'
+
+# Split the files with the following script
+mkdir -p  ../splits/split
+
+for d in */; do
+        mkdir ../splits/split/"$d"
+done
+
+cp ../bash_files/Dockerfile ../splits
+for d in */; do
+        for f in "$d"/*; do
+                split -l 10 -d -a 5 "$f" ../splits/split/"$f"
+        done
+done
