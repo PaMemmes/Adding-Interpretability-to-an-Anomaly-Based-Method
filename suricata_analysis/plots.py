@@ -169,11 +169,11 @@ def plot_alerts(nmbr_signatures, file, save=None):
 
 def plot_alert_distribution(sigs_dist, save=None):
     # Plots the alert distribution of one experiment
-    xlabels_new = make_xlabels(sigs_dist, chars=8)
+    xlabels_new = make_xlabels(sigs_dist, chars=45)
 
     fig, ax = plt.subplots()
-    fig.set_size_inches(24,8)
-    ax.set_xticks(np.arange(len(sigs_dist)), xlabels_new)
+    fig.set_size_inches(18,30)
+    ax.set_yticks(np.arange(len(sigs_dist)), xlabels_new)
     ax.set_axisbelow(True)
     ax.yaxis.grid(color='white', linestyle='solid')
     ax.xaxis.grid(color='white', linestyle='solid')
@@ -183,7 +183,7 @@ def plot_alert_distribution(sigs_dist, save=None):
     ax.set_title('Alert Distribution')
     ax.set_xlabel('Alert')
     ax.set_ylabel('Number of Alerts')
-    ax.bar(np.arange(len(sigs_dist)), sigs_dist.values())
+    ax.barh(np.arange(len(sigs_dist)), sigs_dist.values())
     
     if save is not None:
         fig.savefig(save, bbox_inches="tight")
