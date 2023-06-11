@@ -5,9 +5,7 @@ data/*
 *.model
 suricata_analysis/old/*
 suricata_analysis/plots/*
-suricata_analysis/theZoo_fragmented/*
-suricata_analysis/theZoo_fragmented_random/*
-suricata_analysis/theZoo_original/*
+suricata_analysis/theZoo*
 optims/*
 *.pyc
 src/experiments/*

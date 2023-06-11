@@ -22,6 +22,11 @@ def train(
         num_retraining=1,
         epochs=1,
         save=False):
+    # Train function for wgan or gan
+    # Use hyperoptimization for hyperparameter and trains it on the train set anew
+    # Train it num_training times because of convergence issues
+    # Evaluation on fragmented data and on csecicids2018 test data
+    # Saves results and plots
     experiment = '../experiments/' + save + '/all/experiment'
     Path('../experiments/' + save + '/best/').mkdir(parents=True, exist_ok=True)
 

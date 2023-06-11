@@ -16,6 +16,42 @@ from utils.utils import remove_infs, make_labels_binary, subset, encode
 
 BATCH_SIZE = 256
 
+# FEATURES_DROPPED = [
+#     'Dst IP',
+#     'Flow ID',
+#     'Src IP',
+#     'Src Port',
+#     'Timestamp',
+#     'Bwd Seg Size Avg',
+#     'CWE Flag Count',
+#     'Bwd PSH Flags',
+#     'Fwd Seg Size Avg',
+#     'Fwd Byts/b Avg',
+#     'Fwd Pkts/b Avg',
+#     'Fwd Blk Rate Avg',
+#     'Bwd Byts/b Avg',
+#     'Bwd Blk Rate Avg',
+#     'Protocol',
+#     'Active Mean',
+#     'Pkt Len Min',
+#     'Fwd URG Flags',
+#     'Active Std',
+#     'Bwd Pkt Len Min',
+#     'Active Max',
+#     'Fwd PSH Flags',
+#     'Idle Std',
+#     'Fwd Pkt Len Min',
+#     'Bwd URG Flags',
+#     'Bwd Pkts/b Avg',
+#     'Pkt Len Var',
+#     'Bwd IAT Mean',
+#     'Flow Pkts/s',
+#     'Down/Up Ratio',
+#     'Active Min',
+#     'FIN Flag Cnt',
+#     'Pkt Size Avg']
+
+FEATURES_DROPPED = ['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp']
 
 @dataclass
 class DataFrame:
@@ -52,14 +88,14 @@ class DataFrame:
         else:
             all_files = glob.glob(
                 os.path.join(
-                    '/mnt/md0/files_memmesheimer/cicids2018',
+                    '/mnt/md0/files_memmesheimer/cicids2018/',
                     "*.csv"))
             self.df = pd.concat((pd.read_csv(f, engine='python')
                                 for f in all_files), ignore_index=True)
 
         print('Length of CSE-CICIDS2018 data', len(self.df))
         self.df = self.df.sample(frac=1)
-        self.df = self.df.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
+        self.df = self.df.drop(FEATURES_DROPPED, axis=1)
         self.df_cols = self.df.columns
 
     def create_label_encoder(self):
@@ -67,7 +103,7 @@ class DataFrame:
         df_exe = pd.read_csv(
             '/mnt/md0/files_memmesheimer/csv_fragmentedV3/All.ElectroRAT.pcap_Flow.csv')
         df_exe = df_exe.drop(
-            ['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
+            'Timestamp', axis=1)
         df_exe['Label'] = 'Fragmented Malware'
         df_exe.loc[1, 'Label'] = 'ANOMALY'
         df = pd.concat([df_exe, self.df], ignore_index=True)
@@ -97,8 +133,7 @@ class DataFrame:
                 "*.csv"))
         self.df_frag = pd.concat((pd.read_csv(f, engine='python')
                                  for f in all_files), ignore_index=True)
-        self.df_frag = self.df_frag.drop(
-            ['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
+        self.df_frag = self.df_frag.drop(FEATURES_DROPPED, axis=1)
         assert len(self.df_frag.columns), len(self.df_cols)
         self.df_frag['Label'] = 'Fragmented Malware'
         self.df_frag['Dst Port'] = np.random.randint(
@@ -115,7 +150,6 @@ class DataFrame:
             df, labels, test_size=test_size, shuffle=False)
 
         print('Length of frags test: ', len(self.x_test_frags))
-        
 
     def preprocess_add(self, add_data):
         x = np.array(add_data)
@@ -130,7 +164,8 @@ class DataFrame:
             kind=None,
             frags=False,
             add=None,
-            test_size=0.15):
+            test_size=0.15,
+            scale=True):
         self.create_df(filename)
         self.create_label_encoder()
         self.create_oos_test(test_size)
@@ -156,11 +191,15 @@ class DataFrame:
             x_train, y_train = subset(x_train, y_train, 1)
             print('Using only anomaly data')
 
-        scaler = MinMaxScaler()
+        if scale is True:
+            scaler = MinMaxScaler()
 
-        x_train = scaler.fit_transform(x_train)
-        self.x_test = scaler.transform(self.x_test)
-        self.x_test_frags = scaler.transform(self.x_test_frags)
+            x_train = scaler.fit_transform(x_train)
+            self.x_test = scaler.transform(self.x_test)
+            self.x_test_frags = scaler.transform(self.x_test_frags)
+
+        self.x_test = self.x_test
+        self.x_test_frags = self.x_test_frags
 
         self.train_sqc = DataSequence(x_train, y_train, batch_size=BATCH_SIZE)
         self.test_sqc = DataSequence(
@@ -170,26 +209,6 @@ class DataFrame:
             self.x_test_frags,
             self.y_test_frags,
             batch_size=BATCH_SIZE)
-
-    def create_df_only_normal(self, filename):
-        if filename is not None:
-            df_all = pd.read_csv(
-                '/mnt/md0/files_memmesheimer/cicids2018/' + filename)
-        else:
-            all_files = glob.glob(
-                os.path.join(
-                    '/mnt/md0/files_memmesheimer/cicids2018',
-                    "*.csv"))
-            df_all = pd.concat((pd.read_csv(f)
-                               for f in all_files), ignore_index=True)
-        dfs = defaultdict()
-        self.seperate_tests = defaultdict()
-        for col in df_all['Label'].unique():
-            dfs[col] = df_all[df_all['Label'] == col]
-        self.df = dfs['Benign']
-
-        self.df = self.df.drop('Timestamp', axis=1)
-        self.df_cols = self.df.columns
 
     def seperate_dfs(self, filename, test_size=0.15):
         if filename is not None:
@@ -206,13 +225,13 @@ class DataFrame:
                                for f in all_files), ignore_index=True)
 
         _df = df_all.copy()
-        _df = _df.drop('Timestamp', axis=1)
+        _df = _df.drop(FEATURES_DROPPED, axis=1)
         _df = _df.reset_index(drop=True)
         _df, _labels = remove_infs(_df)
         _x_test = _df.to_numpy()
         scaler = MinMaxScaler()
         scaler.fit(_x_test)
-        
+
         dfs = defaultdict()
         self.seperate_tests = defaultdict()
         for col in df_all['Label'].unique():
@@ -220,47 +239,10 @@ class DataFrame:
             df = dfs[col].sample(frac=1)
             if len(df) <= 5:
                 continue
-            df = df.drop('Timestamp', axis=1)
+            df = df.drop(FEATURES_DROPPED, axis=1)
             df, y_test = remove_infs(df)
             y_test = encode(self.le, y_test)
             x_test = df.to_numpy()
-            x_test = scaler.transform(x_test)
 
             test_sqc = DataSequence(x_test, y_test, batch_size=BATCH_SIZE)
             self.seperate_tests[col] = test_sqc
-
-    # def preprocess_anomalies_only_frags(self, filename = None, kind=None, frags=False, add=None, test_size=0.15):
-    #     self.create_df_only_normal(filename)
-    #     self.create_label_encoder()
-    #     self.create_oos_test(test_size)
-    #     self.make_frags(test_size)
-    #     print('LEN DF', len(self.df))
-    #     self.df = pd.concat([self.df_frag.iloc[int((1-test_size)*len(self.df_frag)):], self.df], ignore_index=True)
-
-    #     print('LEN DF after concat', len(self.df))
-    #     if add is not None:
-    #         self.df = pd.concat([self.df_add, self.df], ignore_index=True)
-    #     self.df = self.df.sample(frac=1)
-    #     df, labels = remove_infs(self.df)
-    #     labels = encode(self.le, labels)
-    #     labels = make_labels_binary(self.le, labels)
-    #     x_train, _, y_train, _ = train_test_split(df, labels, test_size=test_size, shuffle=False)
-
-    #     # Subsetting only Normal Network packets in training set
-    #     if kind == 'normal':
-    #         x_train, y_train = subset(x_train, y_train, 0)
-    #     elif kind == 'anomaly':
-    #         x_train, y_train = subset(x_train, y_train, 1)
-    #         print('Using only anomaly data')
-
-    #     scaler = MinMaxScaler()
-
-    #     x_train = scaler.fit_transform(x_train)
-    #     self.x_test = scaler.transform(self.x_test)
-
-    #     self.x_test_frags = scaler.transform(self.x_test_frags)
-
-    #     self.train_sqc = DataSequence(x_train, y_train, batch_size=BATCH_SIZE)
-    #     self.test_sqc = DataSequence(self.x_test, self.y_test, batch_size=BATCH_SIZE)
-
-    #     self.test_frag_sqc = DataSequence(self.x_test_frags, self.y_test_frags, batch_size=BATCH_SIZE)
