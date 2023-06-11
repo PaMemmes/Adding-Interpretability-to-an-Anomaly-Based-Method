@@ -68,7 +68,12 @@ def run_combined(epochs, retrain, trials, frags=True):
         gan_data.append(fake_x)
     print('Additional data: ', len(gan_data) * BATCH_SIZE)
     data = DataFrame()
-    data.preprocess(filename=None, kind=None, frags=frags, add=gan_data, scale=False)
+    data.preprocess(
+        filename=None,
+        kind=None,
+        frags=frags,
+        add=gan_data,
+        scale=False)
     model = xg_main(
         train=data.train_sqc,
         test=data.test_sqc,

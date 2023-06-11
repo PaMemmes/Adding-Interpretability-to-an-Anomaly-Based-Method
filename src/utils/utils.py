@@ -40,21 +40,13 @@ class DataSequence(tf.keras.utils.Sequence):
         return np.array(batch_x), np.array(batch_y)
 
 
-def read_csv():
-    # all_files = glob.glob(os.path.join('../data/cicids2018', "*.csv"))
-    # df = pd.concat((pd.read_csv(f) for f in all_files), ignore_index=True)
-    df = pd.read_csv(
-        '../data/cicids2018/Friday-02-03-2018_TrafficForML_CICFlowMeter.csv')
-    return df
-
-
 def make_labels_binary(label_encoder, labels):
+    # Normal is 0, anomaly is 1
     normal_data_index = np.where(label_encoder.classes_ == 'Benign')[0][0]
     new_labels = labels.copy()
     new_labels[labels != normal_data_index] = 1
     new_labels[labels == normal_data_index] = 0
     return new_labels
-# Normal is 0, anomaly is 1
 
 
 def subset(x_train, y_train, kind=0):
@@ -86,8 +78,9 @@ def reduce_anomalies(df, pct_anomalies=.01):
     new_df = pd.concat([normal_data, anomalous_data], axis=0)
     return new_df
 
-# Remove infinities and NaNs
+
 def remove_infs(df):
+    # Remove infinities and NaNs
     assert isinstance(df, pd.DataFrame)
     labels = df['Label']
     df = df.drop('Label', axis=1)

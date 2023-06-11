@@ -133,8 +133,10 @@ class HyperWGAN(keras_tuner.HyperModel):
         return -tf.reduce_mean(fake_img)
 
     def make_optimizers(self):
-        self.dis_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001, beta_1=0.5, beta_2=0.9)
-        self.gen_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001, beta_1=0.5, beta_2=0.9)
+        self.dis_optimizer = tf.keras.optimizers.Adam(
+            learning_rate=0.0001, beta_1=0.5, beta_2=0.9)
+        self.gen_optimizer = tf.keras.optimizers.Adam(
+            learning_rate=0.0001, beta_1=0.5, beta_2=0.9)
 
     def get_discriminator(self, dropout):
 

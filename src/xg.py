@@ -24,7 +24,7 @@ import scipy.stats as stats
 
 
 def xg_main(train, test, frags, trials, save='xg'):
-    # Runs XGBoost model with hyperparameteroptimization 
+    # Runs XGBoost model with hyperparameteroptimization
     # Evaluation on frags and on csecicids2018
     name = '../experiments/' + save + '/best/'
     Path(name).mkdir(parents=True, exist_ok=True)
@@ -46,7 +46,6 @@ def xg_main(train, test, frags, trials, save='xg'):
     }
     hyperparameter_grid = {
         'max_depth': [3, 6, 9],
-        #'max_leaves': [2**4, 2**6, 2**8],
         'eta': list(np.linspace(0.1, 0.6, 6)),
         'gamma': [int(x) for x in np.linspace(0, 10, 10)]
     }
@@ -78,7 +77,6 @@ def xg_main(train, test, frags, trials, save='xg'):
         metrics_train['AUC'],
         name + save + '_roc_train.pdf',
         name=save)
-    # preds_train = np.vstack((1-preds_train, preds_train)).T
 
     metrics, cm, cm_norm, preds = calc_all(model, test)
     plot_confusion_matrix(cm, savefile=name + 'cm.pdf', name=save)
@@ -95,8 +93,6 @@ def xg_main(train, test, frags, trials, save='xg'):
         save +
         '_roc.pdf',
         name=save)
-    # preds = np.vstack((1-preds, preds)).T
-    # plot_precision_recall(test.y, preds, name + save + '_precision_recall.pdf')
 
     metrics_frag, cm_frag, cm_frag_norm, preds_frag = calc_all(model, frags)
     plot_confusion_matrix(cm_frag, savefile=name + 'cm_frags.pdf', name=save)
@@ -113,8 +109,6 @@ def xg_main(train, test, frags, trials, save='xg'):
         save +
         '_frags_roc.pdf',
         name=save)
-    # preds_frag = np.vstack((1-preds_frag, preds_frag)).T
-    # plot_precision_recall(frags.y, preds_frag, name + save + '_frags_precision_recall.pdf')
 
     results = {
         'Metrics train': metrics_train,
