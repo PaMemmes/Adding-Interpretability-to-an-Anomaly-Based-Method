@@ -89,13 +89,6 @@ class WGAN(tf.keras.Model):
         self.g_loss = g_loss
         return {"d_loss": d_loss, "g_loss": g_loss}
 
-    # @tf.function
-    # def distributed_train_step(self, dist_inputs):
-    #     mirrored_strategy = tf.distribute.MirroredStrategy()
-    #     per_replica_losses = mirrored_strategy.run(train_step, args=(dist_inputs,))
-    #     return mirrored_strategy.reduce(tf.distribute.ReduceOp.SUM, per_replica_losses,
-    #                             axis=None)
-
     def test_step(self, data):
         x, y = data
         preds = self.discriminator(x, training=False)
@@ -140,10 +133,8 @@ class HyperWGAN(keras_tuner.HyperModel):
         return -tf.reduce_mean(fake_img)
 
     def make_optimizers(self):
-        # self.dis_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5, beta_2=0.9)
-        # self.gen_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002, beta_1=0.5, beta_2=0.9)
-        self.dis_optimizer = tf.keras.optimizers.experimental.RMSprop()
-        self.gen_optimizer = tf.keras.optimizers.experimental.RMSprop()
+        self.dis_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001, beta_1=0.5, beta_2=0.9)
+        self.gen_optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001, beta_1=0.5, beta_2=0.9)
 
     def get_discriminator(self, dropout):
 
@@ -189,14 +180,12 @@ class HyperWGAN(keras_tuner.HyperModel):
     def build(self, hp):
 
         drop_rate = hp.Float('Dropout', min_value=0, max_value=0.30)
-        # activation_function = hp.Choice('activation function', ['relu', 'leaky_relu', 'tanh'])
 
         activation_dict = {
             'leaky_relu': layers.LeakyReLU(),
             'relu': layers.ReLU(),
             'tanh': Activation('tanh')
         }
-        # mirrored_strategy = tf.distribute.MirroredStrategy()
         self.discriminator = self.get_discriminator(drop_rate)
         self.generator = self.get_generator(activation_dict['leaky_relu'])
 
@@ -220,8 +209,6 @@ class HyperWGAN(keras_tuner.HyperModel):
         n_part = np.floor(len(y) / 10)
         for i in range(10):
             ix_start, ix_end = int(i * n_part), int(i * n_part + n_part)
-            # kl = tf.keras.losses.KLDivergence()
-            # kl_div = kl(y[ix_start:ix_end], preds[ix_start:ix_end]).numpy()
             bc = tf.keras.losses.BinaryCrossentropy()
             kl_div = bc(y[ix_start:ix_end], preds[ix_start:ix_end]).numpy()
             results.append(kl_div)
@@ -238,8 +225,6 @@ class HyperWGAN(keras_tuner.HyperModel):
         return np.mean(results)
 
     def fit(self, hp, model, data, callbacks=None, **kwargs):
-        # mirrored_strategy = tf.distribute.MirroredStrategy()
-        # with mirrored_strategy.scope():
         x, y = data.x, data.y
         model.fit(x, y, batch_size=data.batch_size, **kwargs)
         preds = model.discriminator.predict(x)
