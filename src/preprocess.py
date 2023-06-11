@@ -59,7 +59,8 @@ class DataFrame:
 
         print('Length of CSE-CICIDS2018 data', len(self.df))
         self.df = self.df.sample(frac=1)
-        self.df = self.df.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
+        self.df = self.df.drop(
+            ['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
         self.df_cols = self.df.columns
 
     def create_label_encoder(self):
@@ -116,7 +117,6 @@ class DataFrame:
 
         print('Length of frags test: ', len(self.x_test_frags))
 
-
     def preprocess_add(self, add_data):
         x = np.array(add_data)
         x = np.array(x).reshape((x.shape[0] * x.shape[1]), x.shape[2])
@@ -165,7 +165,7 @@ class DataFrame:
             self.x_test_frags = scaler.transform(self.x_test_frags)
         self.x_test = self.x_test
         self.x_test_frags = self.x_test_frags
-        
+
         self.train_sqc = DataSequence(x_train, y_train, batch_size=BATCH_SIZE)
         self.test_sqc = DataSequence(
             self.x_test, self.y_test, batch_size=BATCH_SIZE)
@@ -190,13 +190,14 @@ class DataFrame:
                                for f in all_files), ignore_index=True)
 
         _df = df_all.copy()
-        _df = _df.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
+        _df = _df.drop(['Dst IP', 'Flow ID', 'Src IP',
+                       'Src Port', 'Timestamp'], axis=1)
         _df = _df.reset_index(drop=True)
         _df, _labels = remove_infs(_df)
         _x_test = _df.to_numpy()
         scaler = MinMaxScaler()
         scaler.fit(_x_test)
-        
+
         dfs = defaultdict()
         self.seperate_tests = defaultdict()
         for col in df_all['Label'].unique():
@@ -204,7 +205,8 @@ class DataFrame:
             df = dfs[col].sample(frac=1)
             if len(df) <= 5:
                 continue
-            df = df.drop(['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp'], axis=1)
+            df = df.drop(['Dst IP', 'Flow ID', 'Src IP',
+                         'Src Port', 'Timestamp'], axis=1)
             df, y_test = remove_infs(df)
             y_test = encode(self.le, y_test)
             x_test = df.to_numpy()
