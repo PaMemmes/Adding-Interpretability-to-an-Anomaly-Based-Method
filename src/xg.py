@@ -30,7 +30,7 @@ def xg_main(train, test, frags, trials, save='xg'):
     Path(name).mkdir(parents=True, exist_ok=True)
 
     params = {
-        'num_rounds': 10,
+        'num_rounds': 100,
         'max_depth': 8,
         'max_leaves': 2**8,
         'alpha': 0.9,

@@ -184,7 +184,7 @@ def plot_packet_alerts(packets_sum, sigs_sum, save=None):
 
 def plot_alerts(nmbr_signatures, file, save=None):
     # Plots alerts of an individual malware
-    xlabels_new = make_xlabels(nmbr_signatures, chars=10)
+    xlabels_new = make_xlabels(nmbr_signatures, chars=20)
     fig, ax = plt.subplots()
     file = file.removesuffix('/eve.json')
     file = file.removeprefix('suricata_logs/')

@@ -1,4 +1,5 @@
 # Adding-Interpretability-to-an-Anomaly-Based-Method for Deep Packet Inspection in Intrusion Detection Systems
+Note: The "WGAN-GP-enhanced XG model" here is called "combined".
 
 This github repository includes two different aspects:
 1. Suricata analysis and experiment structure in suricata_analysis
@@ -53,6 +54,7 @@ Run in src/ :
 ```
 
 Explanations of the numbers are given in the main.py file.
+Please note that the preprocess.py file has a FEATURES_DROPPED list that can be commented in if the reduced model should be tested. Then also add the appropriate just use the combined model with frags in the main.py
 
 src/analysis.py creates three different plots of the attack types in csecicids2018, a correlation matrix, provides a ydata ProfileReport for the fragmented data.
 

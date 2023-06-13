@@ -159,8 +159,6 @@ def plot_corr(df):
 
 
 def plot_dists(df):
-    print(df)
-    # ['Dst IP', 'Flow ID', 'Src IP', 'Src Port', 'Timestamp']
     for col in df.columns:
         save = col.replace("/", "_").strip()
         sns.kdeplot(
