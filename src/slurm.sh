@@ -17,7 +17,7 @@ conda install -c conda-forge scikit-plot -y
 conda install -c conda-forge xgboost -y
 conda install -c conda-forge shap -y
 
-python main.py 1 1 1
+python main.py 4 4 4
 
 conda deactivate
 conda env remove -n gan
