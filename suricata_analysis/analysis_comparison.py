@@ -5,6 +5,7 @@ import scienceplots
 import itertools
 import os
 import glob
+from pathlib import Path
 
 import re
 from collections import defaultdict
@@ -140,7 +141,7 @@ class DataHolder():
 
 
 if __name__ == '__main__':
-
+    Path('plots').mkdir(parents=True, exist_ok=True)
     all_data = AllDataHolder(DataHolder('original'), DataHolder(
         'fragmented'), DataHolder('fragmented_random'))
     all_data.make_comp_plots()

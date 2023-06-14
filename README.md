@@ -14,11 +14,12 @@ to get all needed dependencies for the python code.
 ## Suricata Analysis
 In suricata_analysis/bash_files bash files can be found with which the fragmented malware was created.
 ### Prerequisites
-* First download github.com/ytisf/thezoo in that directory.
+* First make a directory "git_repos" in suricata_analysis/
+* Then download github.com/ytisf/thezoo in that directory.
 * Install Suricata (https://suricata.io/)
-* Configure Suricata (Especially set the HOME_NET variable, etc.)
+* Configure Suricata (Especially set the HOME_NET variable, suricata-update, etc.)
 
-1. Run bash file with:  
+1. Run bash file with (pw is infected, use Skip):  
     ```bash
     ./first_part.sh
     ```
@@ -41,7 +42,7 @@ Always remove the files that have been created before starting a new experiment 
 Rename the pcaps to theZoo_original or theZoo_fragmented or theZoo_fragmented_random.
 Now analysis_comparison.py can be run that creates different plots about the data just created.
 
-## Anomaly-Based methods
+## Models
 To run this part of the project, note that the .csv files need to be created from the .pcap files just created.
 They need to be converted using the CICFlowmeterV3.
 You can also download these from my [google drive](https://drive.google.com/file/d/1ZEN4pgDDf214EuXuv5biyyLhd9gvwt_D/view?usp=sharing). This needs to be put in the path /mnt/md0/files_memmesheimer/csv_fragmentedV3/.
