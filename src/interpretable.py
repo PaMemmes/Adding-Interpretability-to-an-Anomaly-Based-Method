@@ -12,7 +12,7 @@ from collections import defaultdict
 
 from preprocess import DataFrame
 
-from utils.utils import read_csv, NumpyEncoder
+from utils.utils import NumpyEncoder
 
 
 def make_local_plots(
