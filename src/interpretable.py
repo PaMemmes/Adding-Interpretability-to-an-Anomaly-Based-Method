@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import json
 from pathlib import Path
-import scienceplots
 
 import pandas as pd
 from collections import defaultdict
