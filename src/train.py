@@ -28,7 +28,7 @@ def train(
     # Evaluation on fragmented data and on csecicids2018 test data
     # Saves results and plots
     experiment = '../experiments/' + save + '/all/experiment'
-    Path('../experiments/' + save + '/best/').mkdir(parents=True, exist_ok=True)
+    Path('../experiments/' + save + '/best/wgan/').mkdir(parents=True, exist_ok=True)
 
     train, test = data.train_sqc, data.test_sqc
 
